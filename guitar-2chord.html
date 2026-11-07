@@ -69,6 +69,14 @@ input{width:100%;font-size:17px;padding:12px 14px;min-height:50px}
 .memo::before{content:"ひと言：";color:var(--accent);font-weight:700}
 .sub{margin:6px 0 0;font-size:13px;color:var(--muted)}
 .sub b{color:var(--fg);font-weight:700}
+.prog{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+.prog .lb{font-size:12px;color:var(--muted);margin:6px 0 4px}
+.bars{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px}
+.bars span{font-family:var(--f-mono);font-size:17px;text-align:center;padding:6px 0;border:1px solid var(--line);border-radius:6px}
+.bars span.b{background:var(--soft)}
+.phr{font-family:var(--f-mono);font-size:17px;margin:2px 0}
+.phr .ar{color:var(--accent);margin:0 6px}
+.noprog{font-size:12px;color:var(--muted);margin-top:8px}
 .empty{color:var(--muted);text-align:center;padding:24px 8px}
 footer{font-size:12px;color:var(--muted);line-height:1.7}
 @media (max-width:420px){.chips{grid-template-columns:repeat(5,1fr)}.chip{font-size:18px;min-height:54px}}
@@ -99,6 +107,7 @@ footer{font-size:12px;color:var(--muted);line-height:1.7}
     <a href="tools.html" style="color:var(--fg)">← 道具箱にもどる</a><br>
     指の移動の3段階：●●● 押さえたまま残せる指がある／●●○ 同じ弦の上をすべらせて移れる（または形をそのまま1弦ずらす）／●○○ 全部置き直し。<br>
     「I–V7」の曲は、どのキーでも同じ2コードの関係で弾けるため、複数の組み合わせに出てきます。V7（G7など）は7を外したコード（G）でも代用できます。<br>
+    「コードの順番」は一般的な譜面で多い形です。譜面によって切り替える位置が少しずれることがあります。<br>
     歌詞は掲載していません。コードは初心者向けの一般的な簡易アレンジです。
   </footer>
 </div>
@@ -153,28 +162,28 @@ const PATTERNS={
    t:曲名 en:原題・別名 g:ジャンル era:年代 p:進行の型 k:定番キーの1つ目のコード
    memo:教えるときのひと言 capo:カポ注記（データがある曲だけ） note:補足 ===== */
 const SONGS=[
-  {t:'メリーさんのひつじ',en:'Mary Had a Little Lamb',g:'童謡',era:'19世紀・アメリカ',p:'I-V7',k:'C',memo:'誰もがメロディを知っているので、切り替えのタイミングを耳でつかみやすい'},
-  {t:'ロンドン橋',en:'London Bridge Is Falling Down',g:'童謡',era:'イギリス伝承',p:'I-V7',k:'C',memo:'切り替えが規則的。最初はダウンストロークだけでOK'},
+  {t:'メリーさんのひつじ',pr:{u:'bar',s:[['1コーラス',['1 1 5 1','1 1 5 1']]]},en:'Mary Had a Little Lamb',g:'童謡',era:'19世紀・アメリカ',p:'I-V7',k:'C',memo:'誰もがメロディを知っているので、切り替えのタイミングを耳でつかみやすい'},
+  {t:'ロンドン橋',pr:{u:'bar',s:[['1コーラス',['1 1 5 1','1 1 5 1']]]},en:'London Bridge Is Falling Down',g:'童謡',era:'イギリス伝承',p:'I-V7',k:'C',memo:'切り替えが規則的。最初はダウンストロークだけでOK'},
   {t:'ぶんぶんぶん',en:'ボヘミア民謡',g:'童謡',era:'ボヘミア民謡',p:'I-V7',k:'C',memo:'短い曲なので「1曲通せた」という達成感が早く来る'},
   {t:'かえるのうた',en:'ドイツ民謡',g:'童謡',era:'ドイツ民謡',p:'I-V7',k:'C',memo:'輪唱曲。先生がメロディ、生徒がコードと役割を分けると盛り上がる'},
-  {t:'ちょうちょう',en:'Hänschen klein（ドイツ民謡）',g:'童謡',era:'ドイツ民謡',p:'I-V7',k:'C',memo:'ゆったりしたテンポで、切り替えの練習曲にちょうどいい'},
+  {t:'ちょうちょう',en:'ヨーロッパ民謡',g:'童謡',era:'ヨーロッパ民謡（ドイツ・スペインなど諸説）',p:'I-V7',k:'C',memo:'ゆったりしたテンポで、切り替えの練習曲にちょうどいい'},
   {t:'マルベリー・ブッシュ',en:'Here We Go Round the Mulberry Bush',g:'童謡',era:'イギリス伝承',p:'I-V7',k:'C',memo:'6/8拍子の「タッタ、タッタ」の揺れを体で覚えられる'},
   {t:'ホーキー・ポーキー',en:'The Hokey Pokey',g:'童謡',era:'1940年代・英米',p:'I-V7',k:'G',memo:'体を動かす遊び歌。弾けると場がなごむ'},
-  {t:'いとしのクレメンタイン（雪山讃歌）',en:'Oh My Darling, Clementine',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'3拍子。「ズン・チャッ・チャッ」で弾くとワルツらしくなる'},
-  {t:'トム・ドゥーリー',en:'Tom Dooley',g:'フォーク',era:'1958年（キングストン・トリオ）',p:'I-V7',k:'G',memo:'大人世代に知名度あり。ゆったりした4拍子で焦らず弾ける'},
-  {t:'ダウン・イン・ザ・バレー',en:'Down in the Valley',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'3拍子のワルツ。1小節ずつ長めに押さえられるので初回向き'},
-  {t:'スキップ・トゥ・マイ・ルー',en:'Skip to My Lou',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'テンポが速め。2コードに慣れてきた2曲目にちょうどいい'},
-  {t:'ポーリー・ウォーリー・ドゥードゥル',en:'Polly Wolly Doodle',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'軽快な2拍子。ダウン・アップのストローク入門に'},
-  {t:'ハッシュ・リトル・ベイビー',en:'Hush, Little Baby',g:'フォーク',era:'アメリカの子守唄',p:'I-V7',k:'G',memo:'子守唄なので、指弾き（アルペジオ）の導入にも使える'},
-  {t:'シュー・フライ',en:"Shoo Fly, Don't Bother Me",g:'フォーク',era:'19世紀・アメリカ',p:'I-V7',k:'G',memo:'フレーズが短く、切り替え回数を数えながら弾ける'},
+  {t:'いとしのクレメンタイン（雪山讃歌）',pr:{u:'ph',s:[['サビ',['1 5','1 5 1']]]},en:'Oh My Darling, Clementine',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'3拍子。「ズン・チャッ・チャッ」で弾くとワルツらしくなる',note:'定番の譜面では途中にC（IV）が入る版も多い。2コードだけの譜面もある'},
+  {t:'トム・ドゥーリー',pr:{u:'ph',s:[['サビ・Aメロ共通',['1 5','5 1']]]},en:'Tom Dooley',g:'フォーク',era:'1958年（キングストン・トリオ）',p:'I-V7',k:'G',memo:'大人世代に知名度あり。ゆったりした4拍子で焦らず弾ける',capo:'キングストン・トリオ版はEキー。E・B7ならカポなし、D・A7ならカポ2で原曲と同じ高さ'},
+  {t:'ダウン・イン・ザ・バレー',pr:{u:'ph',s:[['Aメロ',['1 5','5 1']]]},en:'Down in the Valley',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'3拍子のワルツ。1小節ずつ長めに押さえられるので初回向き'},
+  {t:'スキップ・トゥ・マイ・ルー',pr:{u:'ph',s:[['1コーラス',['1','5','1','5 1']]]},en:'Skip to My Lou',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'テンポが速め。2コードに慣れてきた2曲目にちょうどいい'},
+  {t:'ポーリー・ウォーリー・ドゥードゥル',pr:{u:'ph',s:[['サビ',['1 5','5 1']]]},en:'Polly Wolly Doodle',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'軽快な2拍子。ダウン・アップのストローク入門に'},
+  {t:'ハッシュ・リトル・ベイビー',pr:{u:'ph',s:[['1番',['1 5','5 1']]]},en:'Hush, Little Baby',g:'フォーク',era:'アメリカの子守唄',p:'I-V7',k:'G',memo:'子守唄なので、指弾き（アルペジオ）の導入にも使える'},
+  {t:'シュー・フライ',pr:{u:'ph',s:[['「シュー・フライ」の部分',['1 5','5 1','1 5','5 1']]]},en:"Shoo Fly, Don't Bother Me",g:'フォーク',era:'19世紀・アメリカ',p:'I-V7',k:'G',memo:'フレーズが短く、切り替え回数を数えながら弾ける'},
   {t:'ペイ・ミー・マイ・マネー・ダウン',en:'Pay Me My Money Down',g:'フォーク',era:'労働歌・伝承',p:'I-V7',k:'D',memo:'掛け合いの歌。先生が歌ってあげると生徒は伴奏に集中できる'},
-  {t:'ヒーズ・ゴット・ザ・ホール・ワールド',en:"He's Got the Whole World in His Hands",g:'ゴスペル',era:'スピリチュアル（伝承）',p:'I-V7',k:'G',memo:'手拍子に合わせて弾けば、リズムがずれても気になりにくい'},
-  {t:'ジャンバラヤ',en:'Jambalaya (On the Bayou)',g:'洋楽',era:'1952年（ハンク・ウィリアムズ）',p:'I-V7',k:'C',memo:'各コードを長めに押さえる。小節を数えながら弾く練習に',note:'カントリーの定番。V7をVにしても雰囲気は保てる'},
-  {t:'バナナ・ボート',en:'Day-O (The Banana Boat Song)',g:'洋楽',era:'1956年（ハリー・ベラフォンテ）',p:'I-V7',k:'C',memo:'「デーオ」の掛け声で盛り上がる。カリプソの跳ねるリズムで',note:'原曲アレンジには一瞬だけF（IV）が入る箇所がある。2コード版の譜面も一般的'},
-  {t:'アイコ・アイコ',en:'Iko Iko',g:'洋楽',era:'1965年（ディキシー・カップス）',p:'I-V7',k:'D',memo:'跳ねるシャッフルのリズム入門に。手拍子と一緒に'},
-  {t:'エイキー・ブレイキー・ハート',en:'Achy Breaky Heart',g:'洋楽',era:'1992年（ビリー・レイ・サイラス）',p:'I-V',k:'A',memo:'ノリのいいカントリー。ほぼA→Eの往復だけで1曲いける',capo:'A・Eならカポなしで原曲と同じキー'},
-  {t:'酔いどれ水夫',en:'What Shall We Do with the Drunken Sailor',g:'船乗りの歌',era:'イギリス伝承（シーシャンティ）',p:'i-VII',k:'Dm',memo:'マイナーの響きを体験できる1曲。Am・Gに移すとさらに簡単'},
-  {t:'ジョシュア・フィット・ザ・バトル',en:'Joshua Fit the Battle of Jericho',g:'ゴスペル',era:'スピリチュアル（伝承）',p:'i-V7',k:'Dm',memo:'マイナーの2コード曲。Dm→A7は薬指が2弦をすべるだけ',note:'譜面によってはGmが入る版もある'}
+  {t:'ヒーズ・ゴット・ザ・ホール・ワールド',pr:{u:'ph',s:[['1コーラス',['1','5','1','5 1']]]},en:"He's Got the Whole World in His Hands",g:'ゴスペル',era:'スピリチュアル（伝承）',p:'I-V7',k:'G',memo:'手拍子に合わせて弾けば、リズムがずれても気になりにくい'},
+  {t:'ジャンバラヤ',pr:{u:'bar',s:[['Aメロ（サビも同じ並び）',['1 1 5 5','5 5 1 1','1 1 5 5','5 5 1 1']]]},en:'Jambalaya (On the Bayou)',g:'洋楽',era:'1952年（ハンク・ウィリアムズ）',p:'I-V7',k:'C',memo:'各コードを長めに押さえる。小節を数えながら弾く練習に',note:'カントリーの定番。V7をVにしても雰囲気は保てる'},
+  {t:'バナナ・ボート',pr:{u:'ph',s:[['「デーオ」の部分',['1','5 1']]]},en:'Day-O (The Banana Boat Song)',g:'洋楽',era:'1956年（ハリー・ベラフォンテ）',p:'I-V7',k:'C',memo:'「デーオ」の掛け声で盛り上がる。カリプソの跳ねるリズムで',note:'原曲アレンジには一瞬だけF（IV）が入る箇所がある。2コード版の譜面も一般的'},
+  {t:'アイコ・アイコ',pr:{u:'ph',s:[['Aメロ',['1 5','5 1']],['サビ',['1 5 1']]]},en:'Iko Iko',g:'洋楽',era:'1965年（ディキシー・カップス）',p:'I-V7',k:'D',memo:'跳ねるシャッフルのリズム入門に。手拍子と一緒に',capo:'ディキシー・カップス版はFキー。D・A7の形ならカポ3で原曲と同じ高さ'},
+  {t:'エイキー・ブレイキー・ハート',pr:{u:'ph',s:[['サビ',['1 5','5 1']]]},en:'Achy Breaky Heart',g:'洋楽',era:'1992年（ビリー・レイ・サイラス）',p:'I-V',k:'A',memo:'ノリのいいカントリー。ほぼA→Eの往復だけで1曲いける',capo:'A・Eならカポなしで原曲と同じキー'},
+  {t:'酔いどれ水夫',pr:{u:'ph',s:[['1コーラス',['1','5','1','5 1']]]},en:'What Shall We Do with the Drunken Sailor',g:'船乗りの歌',era:'イギリス伝承（シーシャンティ）',p:'i-VII',k:'Dm',memo:'マイナーの響きを体験できる1曲。Am・Gに移すとさらに簡単',note:'「早朝」の手前に別のコード（Am）を1つ挟む譜面もある'},
+  {t:'ジョシュア・フィット・ザ・バトル',pr:{u:'ph',s:[['サビ',['1','5 1','1','5 1']]]},en:'Joshua Fit the Battle of Jericho',g:'ゴスペル',era:'スピリチュアル（伝承）',p:'i-V7',k:'Dm',memo:'マイナーの2コード曲。Dm→A7は薬指が2弦をすべるだけ',note:'譜面によってはGmが入る版もある'}
 ];
 
 /* ===== ロジック ===== */
@@ -228,6 +237,18 @@ function renderChips(){
   $('shapes').innerHTML=sel.map(c=>`<div class="shape">${chordSVG(c)}${c}</div>`).join('');
 }
 
+function progHTML(s,a,b){
+  if(!s.pr)return '<p class="noprog">コードの順番：確認できる譜面がなかったため未掲載</p>';
+  const nm=t=>t==='1'?a:b;
+  let h='<div class="prog"><b style="font-size:14px">コードの順番</b>';
+  h+=`<span style="font-size:12px;color:var(--muted)">　${s.pr.u==='bar'?'1マス＝1小節':'→ は歌の流れの中での切り替え'}</span>`;
+  s.pr.s.forEach(([lb,lines])=>{
+    h+=`<div class="lb">${esc(lb)}</div>`;
+    if(s.pr.u==='bar')lines.forEach(l=>{h+='<div class="bars">'+l.split(' ').map(t=>`<span class="${t==='5'?'b':''}">${nm(t)}</span>`).join('')+'</div>'});
+    else lines.forEach(l=>{h+='<div class="phr">'+l.split(' ').map(nm).join('<span class="ar">→</span>')+'</div>'});
+  });
+  return h+'</div>';
+}
 function card(s,m,extra){
   const[a,b]=m.pair,[lv,tip]=moveOf(a,b),P=PATTERNS[s.p];
   const defPair=P.keys.find(p=>p[0]===s.k);
@@ -239,6 +260,7 @@ function card(s,m,extra){
   if(tip)h+=`<p class="sub"><b>指のコツ：</b>${esc(tip)}</p>`;
   if(m.sub)h+=`<p class="sub"><b>代用：</b>${esc(m.sub)}</p>`;
   if(!m.def&&defPair)h+=`<p class="sub"><b>定番のキー：</b>${defPair.join('・')}</p>`;
+  h+=progHTML(s,a,b);
   if(s.capo)h+=`<p class="sub"><b>カポ：</b>${esc(s.capo)}</p>`;
   if(s.note)h+=`<p class="sub"><b>補足：</b>${esc(s.note)}</p>`;
   if(extra)h+=extra;
