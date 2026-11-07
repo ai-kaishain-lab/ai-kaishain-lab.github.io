@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>2コード曲さがし｜ギター初心者レッスン用</title>
+<meta name="description" content="コードを2つ選ぶと、その2コードだけで弾ける曲が指の移動の少なさ順に出る、ギターを教える人向けの道具。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="2コード曲さがし｜会社員のAI実験室">
+<meta property="og:description" content="コードを2つ選ぶと、その2つだけで弾ける曲が指の移動の少ない順に出る、ギターを教える人向けの道具。会社員のAI実験室がAIと作りました。">
+<meta property="og:url" content="https://ai-kaishain-lab.github.io/guitar-2chord.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目は道具箱「回せる地球儀」と同じ配色・書体・部品に合わせる */
+:root{
+  --bg:#e9eef2; --fg:#1d2a33; --muted:#5d6d78; --panel:rgba(255,255,255,.86);
+  --line:rgba(29,42,51,.14); --accent:#c2541f; --hi:#e3a33b; --soft:#cfdde8;
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b1117; --fg:#e3eaef; --muted:#8fa1ad; --panel:rgba(15,24,32,.86);
+  --line:rgba(227,234,239,.14); --accent:#f08a4b; --hi:#e6a540; --soft:#122333; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1117; --fg:#e3eaef; --muted:#8fa1ad; --panel:rgba(15,24,32,.86);
+  --line:rgba(227,234,239,.14); --accent:#f08a4b; --hi:#e6a540; --soft:#122333; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-display);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{max-width:760px;margin:0 auto;padding:14px 0 40px;display:flex;flex-direction:column;gap:14px}
+header h1{font-size:22px;margin:0;letter-spacing:.04em}
+header p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.label{font-size:13px;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+input,button{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input{width:100%;font-size:17px;padding:12px 14px;min-height:50px}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
+.chip{min-height:56px;font-family:var(--f-mono);font-size:20px;font-weight:500;position:relative;padding:4px 2px}
+.chip .n{display:block;font-family:var(--f-display);font-size:11px;color:var(--muted);font-weight:400;line-height:1.2}
+.chip[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chip[aria-pressed="true"] .n{color:rgba(255,255,255,.85)}
+.chip:disabled{opacity:.35;cursor:default}
+@media (hover:hover){.chip:not(:disabled):hover{border-color:var(--accent)}}
+.small{font-size:13px;padding:6px 12px;min-height:36px}
+.status{font-size:15px;margin:0}
+.status b{font-family:var(--f-mono);color:var(--accent)}
+.shapes{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.shape{text-align:center;font-family:var(--f-mono);font-size:15px}
+.shape svg{display:block;width:96px;height:auto}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h2{font-size:19px;margin:0;line-height:1.35}
+.card .en{color:var(--muted);font-size:13px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:10px}
+.pair{font-family:var(--f-mono);font-size:22px;font-weight:500;letter-spacing:.02em}
+.pair span{display:inline-block;min-width:44px;text-align:center;padding:2px 8px;border-radius:8px;background:var(--soft);margin-right:6px}
+.meter{display:flex;align-items:center;gap:6px;font-size:14px}
+.dots{display:inline-flex;gap:4px}
+.dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--accent)}
+.dots i.on{background:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.memo{margin:10px 0 0;font-size:15px}
+.memo::before{content:"ひと言：";color:var(--accent);font-weight:700}
+.sub{margin:6px 0 0;font-size:13px;color:var(--muted)}
+.sub b{color:var(--fg);font-weight:700}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+footer{font-size:12px;color:var(--muted);line-height:1.7}
+@media (max-width:420px){.chips{grid-template-columns:repeat(5,1fr)}.chip{font-size:18px;min-height:54px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>2コード曲さがし</h1>
+    <p>コードを2つ選ぶと、その2つだけで弾ける曲が「指の移動が少ない順」に出ます。</p>
+  </header>
+
+  <section class="panel" aria-label="コード選択">
+    <div class="label"><span>コードをタップ（2つまで）　数字は該当曲数</span><button class="small" id="clear" type="button" style="white-space:nowrap">クリア</button></div>
+    <div class="chips" id="chips"></div>
+    <div class="shapes" id="shapes"></div>
+  </section>
+
+  <section class="panel" aria-label="曲名で逆引き">
+    <div class="label"><span>曲名で逆引き（その曲のコードを確認）</span></div>
+    <input id="q" type="search" placeholder="例：ジャンバラヤ／Tom Dooley" autocomplete="off" enterkeyhint="search">
+  </section>
+
+  <p class="status" id="status" aria-live="polite"></p>
+  <div class="list" id="list"></div>
+
+  <footer>
+    <a href="tools.html" style="color:var(--fg)">← 道具箱にもどる</a><br>
+    指の移動の3段階：●●● 押さえたまま残せる指がある／●●○ 同じ弦の上をすべらせて移れる（または形をそのまま1弦ずらす）／●○○ 全部置き直し。<br>
+    「I–V7」の曲は、どのキーでも同じ2コードの関係で弾けるため、複数の組み合わせに出てきます。V7（G7など）は7を外したコード（G）でも代用できます。<br>
+    歌詞は掲載していません。コードは初心者向けの一般的な簡易アレンジです。
+  </footer>
+</div>
+
+<script>
+/* ===== コードの押さえ方（6弦→1弦。-1=弾かない、0=開放）。fingers：1人差し指〜4小指 ===== */
+const CHORDS=['C','G','D','A','E','Am','Em','Dm','G7','C7','D7','A7','E7','B7'];
+const SHAPES={
+  C:{f:[-1,3,2,0,1,0],n:[0,3,2,0,1,0]},  G:{f:[3,2,0,0,0,3],n:[2,1,0,0,0,3]},
+  D:{f:[-1,-1,0,2,3,2],n:[0,0,0,1,3,2]}, A:{f:[-1,0,2,2,2,0],n:[0,0,1,2,3,0]},
+  E:{f:[0,2,2,1,0,0],n:[0,2,3,1,0,0]},   Am:{f:[-1,0,2,2,1,0],n:[0,0,2,3,1,0]},
+  Em:{f:[0,2,2,0,0,0],n:[0,2,3,0,0,0]},  Dm:{f:[-1,-1,0,2,3,1],n:[0,0,0,2,3,1]},
+  G7:{f:[3,2,0,0,0,1],n:[3,2,0,0,0,1]},  C7:{f:[-1,3,2,3,1,0],n:[0,3,2,4,1,0]},
+  D7:{f:[-1,-1,0,2,1,2],n:[0,0,0,2,1,3]},A7:{f:[-1,0,2,0,2,0],n:[0,0,2,0,3,0]},
+  E7:{f:[0,2,0,1,0,0],n:[0,2,0,1,0,0]},  B7:{f:[-1,2,1,2,0,2],n:[0,2,1,3,0,4]}
+};
+
+/* ===== 2コードの組み合わせごとの「指の移動の少なさ」 3=少ない 2=ふつう 1=多い ===== */
+const MOVE={
+  'E|B7': [3,'中指を5弦2フレットに置いたまま切り替えられる'],
+  'Em|B7':[3,'中指を5弦2フレットに置いたまま切り替えられる'],
+  'G|D':  [3,'Gを「薬指＝2弦3f・小指＝1弦3f」の4本押さえにすると、薬指を残したままDへ移れる'],
+  'G|D7': [2,'薬指が1弦の上を3→2フレットへすべるだけ'],
+  'D|A7': [2,'薬指が2弦の上を3→2フレットへすべるだけ'],
+  'D|A':  [2,'薬指が2弦の上を3→2フレットへすべるだけ'],
+  'Dm|A7':[2,'薬指が2弦の上を3→2フレットへすべるだけ'],
+  'Am|E7':[2,'人差し指と中指が、形はそのまま1弦ずつ6弦側へずれる'],
+  'Am|E': [2,'3本の指が、形はそのまま1弦ずつ6弦側へずれる'],
+  'C|G7': [1,'3本とも置き直し。中指・薬指は1弦ずつ6弦側へ、人差し指は1弦へ'],
+  'C|G':  [1,'3本とも置き直し。Gは6弦の指から置くと安定する'],
+  'A|E7': [1,'置き直し。E7は「Eから薬指を離した形」と覚えると早い'],
+  'A|E':  [1,'置き直し。Aの人差し指の位置（4弦2f）にEの薬指が入る'],
+  'Am|G': [1,'置き直し。Gは6弦の中指から置くと迷いにくい'],
+  'Em|D': [1,'置き直し。Dは3弦2fの人差し指から置くと安定する'],
+  'Dm|C': [1,'置き直し。中指は3弦2f→4弦2fへ、となりの弦に移るだけ']
+};
+const pairKey=(a,b)=>{const[x,y]=CHORDS.indexOf(a)<CHORDS.indexOf(b)?[a,b]:[b,a];return x+'|'+y};
+const moveOf=(a,b)=>MOVE[pairKey(a,b)]||[1,''];
+
+/* ===== コード進行の型。曲は「型＋定番キー」で持つ（キーを変えても同じ2コード関係で弾ける） ===== */
+const PATTERNS={
+  'I-V7':{name:'I–V7',keys:[['C','G7'],['G','D7'],['D','A7'],['A','E7'],['E','B7']],
+          alt:[['C','G'],['G','D'],['D','A'],['A','E']],altNote:(a,b,p)=>`${p[1]}の代わりに${b}でも可`},
+  'I-V': {name:'I–V', keys:[['C','G'],['G','D'],['D','A'],['A','E']],
+          alt:[['C','G7'],['G','D7'],['D','A7'],['A','E7'],['E','B7']],altNote:(a,b,p)=>`${p[1]}を${b}にしても可`},
+  'i-V7':{name:'i–V7（マイナー）',keys:[['Am','E7'],['Em','B7'],['Dm','A7']],
+          alt:[['Am','E'],['Dm','A']],altNote:(a,b,p)=>`${p[1]}の代わりに${b}でも可`},
+  'i-VII':{name:'i–♭VII（マイナー）',keys:[['Am','G'],['Em','D'],['Dm','C']],alt:[]}
+};
+
+/* ===== 曲データ（ここに1行足せば曲が増えます）
+   t:曲名 en:原題・別名 g:ジャンル era:年代 p:進行の型 k:定番キーの1つ目のコード
+   memo:教えるときのひと言 capo:カポ注記（データがある曲だけ） note:補足 ===== */
+const SONGS=[
+  {t:'メリーさんのひつじ',en:'Mary Had a Little Lamb',g:'童謡',era:'19世紀・アメリカ',p:'I-V7',k:'C',memo:'誰もがメロディを知っているので、切り替えのタイミングを耳でつかみやすい'},
+  {t:'ロンドン橋',en:'London Bridge Is Falling Down',g:'童謡',era:'イギリス伝承',p:'I-V7',k:'C',memo:'切り替えが規則的。最初はダウンストロークだけでOK'},
+  {t:'ぶんぶんぶん',en:'ボヘミア民謡',g:'童謡',era:'ボヘミア民謡',p:'I-V7',k:'C',memo:'短い曲なので「1曲通せた」という達成感が早く来る'},
+  {t:'かえるのうた',en:'ドイツ民謡',g:'童謡',era:'ドイツ民謡',p:'I-V7',k:'C',memo:'輪唱曲。先生がメロディ、生徒がコードと役割を分けると盛り上がる'},
+  {t:'ちょうちょう',en:'Hänschen klein（ドイツ民謡）',g:'童謡',era:'ドイツ民謡',p:'I-V7',k:'C',memo:'ゆったりしたテンポで、切り替えの練習曲にちょうどいい'},
+  {t:'マルベリー・ブッシュ',en:'Here We Go Round the Mulberry Bush',g:'童謡',era:'イギリス伝承',p:'I-V7',k:'C',memo:'6/8拍子の「タッタ、タッタ」の揺れを体で覚えられる'},
+  {t:'ホーキー・ポーキー',en:'The Hokey Pokey',g:'童謡',era:'1940年代・英米',p:'I-V7',k:'G',memo:'体を動かす遊び歌。弾けると場がなごむ'},
+  {t:'いとしのクレメンタイン（雪山讃歌）',en:'Oh My Darling, Clementine',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'3拍子。「ズン・チャッ・チャッ」で弾くとワルツらしくなる'},
+  {t:'トム・ドゥーリー',en:'Tom Dooley',g:'フォーク',era:'1958年（キングストン・トリオ）',p:'I-V7',k:'G',memo:'大人世代に知名度あり。ゆったりした4拍子で焦らず弾ける'},
+  {t:'ダウン・イン・ザ・バレー',en:'Down in the Valley',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'3拍子のワルツ。1小節ずつ長めに押さえられるので初回向き'},
+  {t:'スキップ・トゥ・マイ・ルー',en:'Skip to My Lou',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'テンポが速め。2コードに慣れてきた2曲目にちょうどいい'},
+  {t:'ポーリー・ウォーリー・ドゥードゥル',en:'Polly Wolly Doodle',g:'フォーク',era:'アメリカ民謡',p:'I-V7',k:'G',memo:'軽快な2拍子。ダウン・アップのストローク入門に'},
+  {t:'ハッシュ・リトル・ベイビー',en:'Hush, Little Baby',g:'フォーク',era:'アメリカの子守唄',p:'I-V7',k:'G',memo:'子守唄なので、指弾き（アルペジオ）の導入にも使える'},
+  {t:'シュー・フライ',en:"Shoo Fly, Don't Bother Me",g:'フォーク',era:'19世紀・アメリカ',p:'I-V7',k:'G',memo:'フレーズが短く、切り替え回数を数えながら弾ける'},
+  {t:'ペイ・ミー・マイ・マネー・ダウン',en:'Pay Me My Money Down',g:'フォーク',era:'労働歌・伝承',p:'I-V7',k:'D',memo:'掛け合いの歌。先生が歌ってあげると生徒は伴奏に集中できる'},
+  {t:'ヒーズ・ゴット・ザ・ホール・ワールド',en:"He's Got the Whole World in His Hands",g:'ゴスペル',era:'スピリチュアル（伝承）',p:'I-V7',k:'G',memo:'手拍子に合わせて弾けば、リズムがずれても気になりにくい'},
+  {t:'ジャンバラヤ',en:'Jambalaya (On the Bayou)',g:'洋楽',era:'1952年（ハンク・ウィリアムズ）',p:'I-V7',k:'C',memo:'各コードを長めに押さえる。小節を数えながら弾く練習に',note:'カントリーの定番。V7をVにしても雰囲気は保てる'},
+  {t:'バナナ・ボート',en:'Day-O (The Banana Boat Song)',g:'洋楽',era:'1956年（ハリー・ベラフォンテ）',p:'I-V7',k:'C',memo:'「デーオ」の掛け声で盛り上がる。カリプソの跳ねるリズムで',note:'原曲アレンジには一瞬だけF（IV）が入る箇所がある。2コード版の譜面も一般的'},
+  {t:'アイコ・アイコ',en:'Iko Iko',g:'洋楽',era:'1965年（ディキシー・カップス）',p:'I-V7',k:'D',memo:'跳ねるシャッフルのリズム入門に。手拍子と一緒に'},
+  {t:'エイキー・ブレイキー・ハート',en:'Achy Breaky Heart',g:'洋楽',era:'1992年（ビリー・レイ・サイラス）',p:'I-V',k:'A',memo:'ノリのいいカントリー。ほぼA→Eの往復だけで1曲いける',capo:'A・Eならカポなしで原曲と同じキー'},
+  {t:'酔いどれ水夫',en:'What Shall We Do with the Drunken Sailor',g:'船乗りの歌',era:'イギリス伝承（シーシャンティ）',p:'i-VII',k:'Dm',memo:'マイナーの響きを体験できる1曲。Am・Gに移すとさらに簡単'},
+  {t:'ジョシュア・フィット・ザ・バトル',en:'Joshua Fit the Battle of Jericho',g:'ゴスペル',era:'スピリチュアル（伝承）',p:'i-V7',k:'Dm',memo:'マイナーの2コード曲。Dm→A7は薬指が2弦をすべるだけ',note:'譜面によってはGmが入る版もある'}
+];
+
+/* ===== ロジック ===== */
+const $=id=>document.getElementById(id);
+let sel=[];
+const same=(p,a,b)=>(p[0]===a&&p[1]===b)||(p[0]===b&&p[1]===a);
+
+function candidates(s){
+  const P=PATTERNS[s.p], out=[];
+  P.keys.forEach(p=>out.push({pair:p,sub:null,def:p[0]===s.k}));
+  P.alt.forEach(p=>{const base=P.keys.find(k=>k[0]===p[0]);if(base)out.push({pair:p,sub:P.altNote(p[0],p[1],base),def:false})});
+  return out;
+}
+function rank(c){const m=moveOf(c.pair[0],c.pair[1])[0];return m*10-(c.sub?5:0)+(c.def?1:0)}
+function matchFor(s,chosen){
+  let c=candidates(s);
+  if(chosen.length===0) c=c.filter(x=>x.def);
+  else if(chosen.length===1) c=c.filter(x=>x.pair.includes(chosen[0]));
+  else c=c.filter(x=>same(x.pair,chosen[0],chosen[1]));
+  if(!c.length) return null;
+  return c.sort((a,b)=>rank(b)-rank(a))[0];
+}
+function countFor(chosen){return SONGS.reduce((n,s)=>n+(matchFor(s,chosen)?1:0),0)}
+
+function dots(lv){return '<span class="dots" aria-hidden="true">'+[1,2,3].map(i=>`<i class="${i<=lv?'on':''}"></i>`).join('')+'</span>'}
+const LVTXT={3:'少ない',2:'ふつう',1:'多い'};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function chordSVG(name){
+  const sh=SHAPES[name];if(!sh)return'';
+  const x0=14,y0=22,dx=14,dy=18,frets=4;let g='';
+  for(let i=0;i<6;i++)g+=`<line x1="${x0+i*dx}" y1="${y0}" x2="${x0+i*dx}" y2="${y0+dy*frets}" stroke="currentColor" stroke-width="1"/>`;
+  for(let j=0;j<=frets;j++)g+=`<line x1="${x0}" y1="${y0+j*dy}" x2="${x0+5*dx}" y2="${y0+j*dy}" stroke="currentColor" stroke-width="${j?1:3}"/>`;
+  sh.f.forEach((f,i)=>{const x=x0+i*dx;
+    if(f<0)g+=`<text x="${x}" y="15" text-anchor="middle" font-size="11" fill="currentColor">×</text>`;
+    else if(f===0)g+=`<circle cx="${x}" cy="11" r="4" fill="none" stroke="currentColor"/>`;
+    else{const y=y0+(f-.5)*dy;g+=`<circle cx="${x}" cy="${y}" r="6.5" fill="var(--accent)"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="10" fill="#fff">${sh.n[i]}</text>`}});
+  return `<svg viewBox="0 0 98 98" role="img" aria-label="${name}の押さえ方">${g}</svg>`;
+}
+
+function renderChips(){
+  $('chips').innerHTML=CHORDS.map(c=>{
+    const on=sel.includes(c);
+    let n;
+    if(on) n=countFor(sel);
+    else if(sel.length===0) n=countFor([c]);
+    else n=countFor([sel[0],c]);
+    const dis=!on&&n===0;
+    return `<button type="button" class="chip" data-c="${c}" aria-pressed="${on}" ${dis?'disabled':''}>${c}<span class="n">${n}曲</span></button>`;
+  }).join('');
+  $('shapes').innerHTML=sel.map(c=>`<div class="shape">${chordSVG(c)}${c}</div>`).join('');
+}
+
+function card(s,m,extra){
+  const[a,b]=m.pair,[lv,tip]=moveOf(a,b),P=PATTERNS[s.p];
+  const defPair=P.keys.find(p=>p[0]===s.k);
+  let h=`<article class="card"><h2>${esc(s.t)}</h2><div class="en">${esc(s.en)}</div>
+  <div class="row"><div class="pair"><span>${a}</span><span>${b}</span></div>
+  <div class="meter">指の移動 ${dots(lv)} <b>${LVTXT[lv]}</b></div></div>
+  <div class="tags"><span class="tag">${esc(s.g)}</span><span class="tag">${esc(s.era)}</span><span class="tag">${P.name}</span></div>
+  <p class="memo">${esc(s.memo)}</p>`;
+  if(tip)h+=`<p class="sub"><b>指のコツ：</b>${esc(tip)}</p>`;
+  if(m.sub)h+=`<p class="sub"><b>代用：</b>${esc(m.sub)}</p>`;
+  if(!m.def&&defPair)h+=`<p class="sub"><b>定番のキー：</b>${defPair.join('・')}</p>`;
+  if(s.capo)h+=`<p class="sub"><b>カポ：</b>${esc(s.capo)}</p>`;
+  if(s.note)h+=`<p class="sub"><b>補足：</b>${esc(s.note)}</p>`;
+  if(extra)h+=extra;
+  return h+'</article>';
+}
+
+function render(){
+  renderChips();
+  const q=$('q').value.trim().toLowerCase();
+  let html='',status='';
+  if(q){
+    const hits=SONGS.filter(s=>(s.t+' '+s.en).toLowerCase().includes(q));
+    status=`「${esc($('q').value.trim())}」の検索結果：<b>${hits.length}</b>曲（コード選択は無視しています）`;
+    html=hits.map(s=>{
+      const m=matchFor(s,[]),others=PATTERNS[s.p].keys.filter(p=>!same(p,m.pair[0],m.pair[1]));
+      const extra=others.length?`<p class="sub"><b>ほかのキーでも：</b>${others.map(p=>p.join('・')).join('　/　')}</p>`:'';
+      return card(s,m,extra);
+    }).join('');
+    if(!hits.length)html='<div class="empty">見つかりませんでした。カタカナ・英語の原題でも探せます。</div>';
+  }else{
+    const rows=SONGS.map(s=>({s,m:matchFor(s,sel)})).filter(r=>r.m)
+      .sort((x,y)=>rank(y.m)-rank(x.m)||x.s.t.localeCompare(y.s.t,'ja'));
+    if(sel.length===0)status=`全<b>${rows.length}</b>曲（定番キーで表示）。コードを選ぶと絞り込みます`;
+    else if(sel.length===1)status=`<b>${sel[0]}</b> を使う曲：<b>${rows.length}</b>曲。もう1つ選ぶと確定します`;
+    else status=`<b>${sel[0]}</b> と <b>${sel[1]}</b> だけで弾ける曲：<b>${rows.length}</b>曲`;
+    html=rows.map(r=>card(r.s,r.m)).join('');
+    if(!rows.length)html='<div class="empty">この2コードだけで弾ける曲はまだ登録がありません。<br>どちらかを外すと、組み合わせ候補が出ます。</div>';
+  }
+  $('status').innerHTML=status;$('list').innerHTML=html;
+}
+
+$('chips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip');if(!b||b.disabled)return;
+  const c=b.dataset.c;
+  if(sel.includes(c))sel=sel.filter(x=>x!==c);
+  else if(sel.length<2)sel.push(c);
+  else sel=[sel[0],c]; // 3つ目は2つ目と入れ替え
+  render();
+});
+$('clear').addEventListener('click',()=>{sel=[];render()});
+$('q').addEventListener('input',render);
+render();
+</script>
+</body>
+</html>
