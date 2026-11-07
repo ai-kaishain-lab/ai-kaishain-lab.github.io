@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;font-size:14px}[hidden]{display:none!important}</style>
+<title>回せる地球儀</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-screen canvas globe, a slim instrument bar on top, a readout card bottom-left */
+:root{
+  --bg:#e9eef2; --ocean:#cfdde8; --ocean-edge:#9fb6c7; --land:#f7f5ef; --land-hi:#e3a33b;
+  --border:#8a9aa6; --grid:rgba(40,70,95,.16); --fg:#1d2a33; --muted:#5d6d78; --panel:rgba(255,255,255,.86);
+  --line:rgba(29,42,51,.14); --accent:#c2541f;
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b1117; --ocean:#122333; --ocean-edge:#2c4d66; --land:#33424d; --land-hi:#e6a540;
+  --border:#5f7584; --grid:rgba(150,190,220,.12); --fg:#e3eaef; --muted:#8fa1ad; --panel:rgba(15,24,32,.86);
+  --line:rgba(227,234,239,.14); --accent:#f08a4b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1117; --ocean:#122333; --ocean-edge:#2c4d66; --land:#33424d; --land-hi:#e6a540;
+  --border:#5f7584; --grid:rgba(150,190,220,.12); --fg:#e3eaef; --muted:#8fa1ad; --panel:rgba(15,24,32,.86);
+  --line:rgba(227,234,239,.14); --accent:#f08a4b; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-display);overflow:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{position:relative;height:100%;display:flex;flex-direction:column;gap:10px;padding-block:12px;box-sizing:border-box}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;z-index:2}
+.bar h1{font-size:18px;margin:0 8px 0 0;letter-spacing:.04em;text-wrap:balance}
+.search{flex:1 1 200px;min-width:0;max-width:320px}
+input,button{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+input{width:100%;box-sizing:border-box}
+button{cursor:pointer}
+button:hover{border-color:var(--accent)}
+button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{position:relative;flex:1;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+canvas.dragging{cursor:grabbing}
+.readout{position:absolute;left:0;bottom:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;min-width:200px;max-width:calc(100% - 2px);box-sizing:border-box;backdrop-filter:blur(6px);pointer-events:none}
+.readout .name{font-size:20px;font-weight:700}
+.readout .en{color:var(--muted);font-size:12px;margin-bottom:6px}
+.kv{font-family:var(--f-mono);font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-variant-numeric:tabular-nums}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font-size:12px;padding:3px 8px;border-radius:5px;white-space:nowrap;transform:translate(12px,-28px)}
+.hint{position:absolute;right:0;bottom:0;font-size:11px;color:var(--muted);text-align:right;line-height:1.6}
+.err{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);text-align:center;padding:20px}
+@media (max-width:560px){.hint{display:none}.bar h1{font-size:16px;width:100%}}
+</style>
+
+<div class="app">
+  <div class="bar">
+    <h1>回せる地球儀</h1>
+    <div class="search"><input id="q" list="countries" placeholder="国名で移動（例：ブラジル）" autocomplete="off"><datalist id="countries"></datalist></div>
+    <button id="spin" aria-pressed="false">自転</button>
+    <button id="home">日本へ</button>
+    <button id="reset">縮尺リセット</button>
+  </div>
+  <div class="stage" id="stage">
+    <canvas id="c"></canvas>
+    <div class="tip" id="tip" hidden></div>
+    <div class="readout" id="readout">
+      <div class="name" id="rName">—</div>
+      <div class="en" id="rEn">国をクリックすると詳細を表示</div>
+      <dl class="kv">
+        <dt>カーソル</dt><dd id="rCur">—</dd>
+        <dt>視点中心</dt><dd id="rCen">—</dd>
+        <dt>面積(概算)</dt><dd id="rArea">—</dd>
+        <dt>倍率</dt><dd id="rZoom">1.0×</dd>
+      </dl>
+    </div>
+    <div class="hint">ドラッグ：回転　ホイール／ピンチ：拡大縮小（1.6倍以上で国名表示）<br>正射図法（地球儀の見え方そのもの）</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datamaps/0.5.9/datamaps.world.min.js"></script>
+<script>
+(function(){
+const stage=document.getElementById('stage'), canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+const tip=document.getElementById('tip');
+if(!window.d3||!window.topojson||!window.Datamap||!Datamap.prototype.worldTopo||typeof Datamap.prototype.worldTopo!=='object'){
+  stage.innerHTML='<div class="err">地図データを読み込めませんでした。ページを再読み込みしてください。</div>';return;
+}
+// ISO alpha-3 -> alpha-2 (for Japanese names via Intl.DisplayNames)
+const A3=("AFG AF ALB AL DZA DZ AGO AO ARG AR ARM AM AUS AU AUT AT AZE AZ BHS BS BGD BD BLR BY BEL BE BLZ BZ BEN BJ BTN BT BOL BO BIH BA BWA BW BRA BR BRN BN BGR BG BFA BF BDI BI KHM KH CMR CM CAN CA CAF CF TCD TD CHL CL CHN CN COL CO COG CG COD CD CRI CR CIV CI HRV HR CUB CU CYP CY CZE CZ DNK DK DJI DJ DOM DO ECU EC EGY EG SLV SV GNQ GQ ERI ER EST EE ETH ET FLK FK FJI FJ FIN FI FRA FR GUF GF GAB GA GMB GM GEO GE DEU DE GHA GH GRC GR GRL GL GTM GT GIN GN GNB GW GUY GY HTI HT HND HN HUN HU ISL IS IND IN IDN ID IRN IR IRQ IQ IRL IE ISR IL ITA IT JAM JM JPN JP JOR JO KAZ KZ KEN KE PRK KP KOR KR KWT KW KGZ KG LAO LA LVA LV LBN LB LSO LS LBR LR LBY LY LTU LT LUX LU MKD MK MDG MG MWI MW MYS MY MLI ML MRT MR MEX MX MDA MD MNG MN MNE ME MAR MA MOZ MZ MMR MM NAM NA NPL NP NLD NL NCL NC NZL NZ NIC NI NER NE NGA NG NOR NO OMN OM PAK PK PSE PS PAN PA PNG PG PRY PY PER PE PHL PH POL PL PRT PT PRI PR QAT QA ROU RO RUS RU RWA RW ESH EH SAU SA SEN SN SRB RS SLE SL SVK SK SVN SI SLB SB SOM SO ZAF ZA SSD SS ESP ES LKA LK SDN SD SUR SR SWZ SZ SWE SE CHE CH SYR SY TWN TW TJK TJ TZA TZ THA TH TLS TL TGO TG TTO TT TUN TN TUR TR TKM TM UGA UG UKR UA ARE AE GBR GB USA US URY UY UZB UZ VUT VU VEN VE VNM VN YEM YE ZMB ZM ZWE ZW ATA AQ ATF TF CS- XK KOS XK").split(' ');
+const a3to2={};for(let i=0;i<A3.length;i+=2)a3to2[A3[i]]=A3[i+1];
+let dn=null;try{dn=new Intl.DisplayNames(['ja'],{type:'region'})}catch(e){}
+const extra={"-99":"北キプロス","SOL":"ソマリランド","CS-":"コソボ","KOS":"コソボ"};
+
+const topo=Datamap.prototype.worldTopo;
+const objName=Object.keys(topo.objects)[0];
+const feats=topojson.feature(topo,topo.objects[objName]).features;
+feats.forEach(f=>{
+  const en=(f.properties&&f.properties.name)||f.id;
+  let ja=null;const a2=a3to2[f.id];
+  if(a2&&dn){try{ja=dn.of(a2)}catch(e){}}
+  f.ja=extra[f.id]||(ja&&ja!==a2?ja:en); f.en=en;
+  f.areaKm2=d3.geoArea(f)*6371.0088*6371.0088;
+  f.center=d3.geoCentroid(f);
+});
+const mesh=topojson.mesh(topo,topo.objects[objName],(a,b)=>a!==b);
+const land={type:'FeatureCollection',features:feats};
+const grat=d3.geoGraticule10();
+const special=[0,23.44,-23.44,66.56,-66.56];
+
+const dl=document.getElementById('countries');
+[...feats].sort((a,b)=>a.ja.localeCompare(b.ja,'ja')).forEach(f=>{const o=document.createElement('option');o.value=f.ja;o.label=f.en;dl.appendChild(o)});
+
+const proj=d3.geoOrthographic().clipAngle(90).precision(.4);
+const path=d3.geoPath(proj,ctx);
+let W=0,H=0,R=0,dpr=1,scaleK=1, rot=[-138,-36,0], sel=null, hov=null, spin=false, vel=[0,0], anim=null;
+
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+let C={};function readColors(){['--ocean','--ocean-edge','--land','--land-hi','--border','--grid','--accent','--fg'].forEach(k=>C[k]=cssVar(k))}
+readColors();
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readColors();draw()})}catch(e){}
+new MutationObserver(()=>{readColors();draw()}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+function resize(){
+  const r=stage.getBoundingClientRect();dpr=window.devicePixelRatio||1;W=r.width;H=r.height;
+  canvas.width=W*dpr;canvas.height=H*dpr;R=Math.min(W,H)/2-14;draw();
+}
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+  proj.translate([W/2,H/2]).scale(Math.max(R,20)*scaleK).rotate(rot);
+  const s=proj.scale();
+  // ocean
+  const g=ctx.createRadialGradient(W/2-s*.3,H/2-s*.35,s*.1,W/2,H/2,s);
+  g.addColorStop(0,C['--ocean']);g.addColorStop(1,C['--ocean-edge']);
+  ctx.beginPath();path({type:'Sphere'});ctx.fillStyle=g;ctx.fill();
+  // graticule
+  ctx.beginPath();path(grat);ctx.strokeStyle=C['--grid'];ctx.lineWidth=.7;ctx.stroke();
+  // land
+  ctx.beginPath();path(land);ctx.fillStyle=C['--land'];ctx.fill();
+  if(hov&&hov!==sel){ctx.beginPath();path(hov);ctx.globalAlpha=.45;ctx.fillStyle=C['--land-hi'];ctx.fill();ctx.globalAlpha=1}
+  if(sel){ctx.beginPath();path(sel);ctx.fillStyle=C['--land-hi'];ctx.fill()}
+  ctx.beginPath();path(mesh);ctx.strokeStyle=C['--border'];ctx.lineWidth=.5;ctx.stroke();
+  // equator, tropics, polar circles
+  special.forEach((lat,i)=>{ctx.beginPath();path({type:'LineString',coordinates:d3.range(-180,181,2).map(l=>[l,lat])});
+    ctx.setLineDash(i?[4,4]:[]);ctx.strokeStyle=C['--accent'];ctx.globalAlpha=i?.45:.7;ctx.lineWidth=1;ctx.stroke()});
+  ctx.setLineDash([]);ctx.globalAlpha=1;
+  ctx.beginPath();path({type:'Sphere'});ctx.strokeStyle=C['--border'];ctx.lineWidth=1;ctx.stroke();
+  drawLabels();
+  document.getElementById('rCen').textContent=fmt([-rot[0],-rot[1]]);
+  document.getElementById('rZoom').textContent=scaleK.toFixed(1)+'×';
+}
+// country names appear from 1.6x; larger countries first, overlapping labels skipped
+function drawLabels(){
+  if(scaleK<1.6)return;
+  const center=[-rot[0],-rot[1]],boxes=[];
+  const fs=Math.round(Math.min(15,9+scaleK*.9));
+  ctx.font='700 '+fs+'px '+cssVar('--f-display');ctx.textAlign='center';ctx.textBaseline='middle';
+  const cand=[];
+  for(const f of feats){
+    if(d3.geoDistance(f.center,center)>Math.PI/2*0.92)continue;
+    const a=path.area(f);if(a<700)continue;
+    const p=proj(f.center);if(!p)continue;cand.push([a,f,p]);
+  }
+  cand.sort((x,y)=>y[0]-x[0]);
+  for(const[,f,p]of cand){
+    const w=ctx.measureText(f.ja).width+6,h=fs+4,b=[p[0]-w/2,p[1]-h/2,p[0]+w/2,p[1]+h/2];
+    if(boxes.some(o=>b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]))continue;
+    boxes.push(b);
+    ctx.lineWidth=3;ctx.strokeStyle=C['--land'];ctx.globalAlpha=.9;ctx.strokeText(f.ja,p[0],p[1]);
+    ctx.globalAlpha=1;ctx.fillStyle=C['--fg'];ctx.fillText(f.ja,p[0],p[1]);
+  }
+}
+function fmt(ll){if(!ll)return'—';let[lo,la]=ll;lo=((lo+540)%360)-180;
+  return Math.abs(la).toFixed(1)+'°'+(la>=0?'N':'S')+'  '+Math.abs(lo).toFixed(1)+'°'+(lo>=0?'E':'W')}
+function pick(x,y){const ll=proj.invert([x,y]);if(!ll)return[null,null];
+  // invert returns a point even outside the disc; check it is on the visible hemisphere
+  const p=proj(ll);if(!p||Math.hypot(p[0]-x,p[1]-y)>1)return[null,null];
+  if(d3.geoDistance(ll,[-rot[0],-rot[1]])>Math.PI/2)return[null,null];
+  return[ll,feats.find(f=>d3.geoContains(f,ll))||null]}
+function showSel(f){
+  sel=f;document.getElementById('rName').textContent=f?f.ja:'—';
+  document.getElementById('rEn').textContent=f?f.en:'国をクリックすると詳細を表示';
+  document.getElementById('rArea').textContent=f?Math.round(f.areaKm2).toLocaleString('ja-JP')+' km²':'—';draw()}
+function flyTo(ll,k){
+  stopSpin();cancelAnimationFrame(anim);vel=[0,0];
+  const from=rot.slice(),to=[-ll[0],-ll[1],0];
+  while(to[0]-from[0]>180)to[0]-=360;while(to[0]-from[0]<-180)to[0]+=360;
+  const fromK=scaleK,toK=k||scaleK;const ir=d3.interpolate(from,to),t0=performance.now(),dur=1100;
+  (function step(now){const t=Math.min(1,(now-t0)/dur),e=d3.easeCubicInOut(t);rot=ir(e);scaleK=fromK+(toK-fromK)*e;draw();if(t<1)anim=requestAnimationFrame(step)})(t0);
+}
+
+// pointer drag with inertia + pinch zoom
+const pts=new Map();let last=null,lastT=0,pinch0=null,moved=0;
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.offsetX,e.offsetY]);
+  cancelAnimationFrame(anim);vel=[0,0];moved=0;last=[e.offsetX,e.offsetY];lastT=performance.now();canvas.classList.add('dragging');
+  if(pts.size===2){const[a,b]=[...pts.values()];pinch0={d:Math.hypot(a[0]-b[0],a[1]-b[1]),k:scaleK}}});
+canvas.addEventListener('pointermove',e=>{
+  const x=e.offsetX,y=e.offsetY;
+  if(pts.has(e.pointerId)){pts.set(e.pointerId,[x,y]);
+    if(pts.size===2&&pinch0){const[a,b]=[...pts.values()];scaleK=clampK(pinch0.k*Math.hypot(a[0]-b[0],a[1]-b[1])/pinch0.d);draw();return}
+    const dx=x-last[0],dy=y-last[1];moved+=Math.abs(dx)+Math.abs(dy);
+    const k=75/(proj.scale());// degrees per pixel
+    rot[0]+=dx*k;rot[1]=Math.max(-90,Math.min(90,rot[1]-dy*k));
+    const now=performance.now(),dt=Math.max(1,now-lastT);vel=[dx*k/dt*16,-dy*k/dt*16];last=[x,y];lastT=now;tip.hidden=true;draw();return}
+  if(e.pointerType==='mouse'){const[ll,f]=pick(x,y);document.getElementById('rCur').textContent=fmt(ll);
+    if(f!==hov){hov=f;draw()}
+    if(f){tip.hidden=false;tip.textContent=f.ja;tip.style.left=x+'px';tip.style.top=y+'px'}else tip.hidden=true}
+});
+function end(e){if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);if(pts.size<2)pinch0=null;
+  if(pts.size===0){canvas.classList.remove('dragging');
+    if(moved<5){const[,f]=pick(e.offsetX,e.offsetY);showSel(f)}
+    else if(performance.now()-lastT<80&&!matchMedia('(prefers-reduced-motion: reduce)').matches)coast()}}
+canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
+canvas.addEventListener('pointerleave',()=>{if(!pts.size){tip.hidden=true;if(hov){hov=null;draw()}}});
+function coast(){(function step(){vel=[vel[0]*.94,vel[1]*.94];rot[0]+=vel[0];rot[1]=Math.max(-90,Math.min(90,rot[1]+vel[1]));draw();
+  if(Math.abs(vel[0])+Math.abs(vel[1])>.02)anim=requestAnimationFrame(step)})()}
+function clampK(k){return Math.max(.6,Math.min(12,k))}
+canvas.addEventListener('wheel',e=>{e.preventDefault();scaleK=clampK(scaleK*Math.exp(-e.deltaY*.0015));draw()},{passive:false});
+
+// auto spin: the surface moves eastward (left → right), matching Earth's real rotation
+let spinRaf=null,spinT=0;
+function spinLoop(t){if(!spin)return;const dt=spinT?Math.min(50,t-spinT):16;spinT=t;rot[0]+=dt*.006;draw();spinRaf=requestAnimationFrame(spinLoop)}
+function stopSpin(){spin=false;spinT=0;cancelAnimationFrame(spinRaf);document.getElementById('spin').setAttribute('aria-pressed','false')}
+document.getElementById('spin').addEventListener('click',e=>{if(spin){stopSpin();return}
+  spin=true;e.currentTarget.setAttribute('aria-pressed','true');cancelAnimationFrame(anim);spinRaf=requestAnimationFrame(spinLoop)});
+document.getElementById('home').addEventListener('click',()=>{const j=feats.find(f=>f.id==='JPN');showSel(j);flyTo([138,36],2.6)});
+document.getElementById('reset').addEventListener('click',()=>flyTo([-rot[0],-rot[1]],1));
+const q=document.getElementById('q');
+function go(){const v=q.value.trim();if(!v)return;
+  const f=feats.find(f=>f.ja===v||f.en.toLowerCase()===v.toLowerCase())||feats.find(f=>f.ja.includes(v)||f.en.toLowerCase().includes(v.toLowerCase()));
+  if(f){showSel(f);const a=f.areaKm2;flyTo(f.center,Math.max(1,Math.min(8,4.2-Math.log10(a)*.45+1.5)))}}
+q.addEventListener('change',go);q.addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+
+window.addEventListener('resize',resize);resize();
+})();
+</script>
+
+</html>
