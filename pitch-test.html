@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>音程トレーニング（テスト版）</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{--bg:#0f1115;--card:#181b22;--line:#2a2f3a;--text:#e9ecf2;--sub:#9aa3b2;--ok:#3ecf8e;--warn:#f5b84b;--bad:#f06a6a;--accent:#6aa8ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;-webkit-tap-highlight-color:transparent}
+main{max-width:560px;margin:0 auto;padding:16px 14px 40px}
+h1{font-size:18px;margin:4px 0 12px;font-weight:700;letter-spacing:.02em}
+.tabs{display:flex;gap:6px;background:var(--card);padding:4px;border-radius:12px;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--sub);padding:10px 4px;border-radius:9px;font-size:14px;font-weight:600}
+.tabs button.on{background:var(--line);color:var(--text)}
+.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+label.sub,.sub{color:var(--sub);font-size:13px}
+select,button.btn{font-size:15px;border-radius:10px;border:1px solid var(--line);background:#20242d;color:var(--text);padding:10px 14px}
+button.btn.primary{background:var(--accent);border-color:var(--accent);color:#0b1220;font-weight:700}
+button.btn:disabled{opacity:.4}
+.big{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:6px 0 2px}
+.note{font-size:56px;font-weight:800;line-height:1}
+.oct{font-size:18px;color:var(--sub)}
+.cents{text-align:center;font-size:15px;color:var(--sub);height:20px}
+.meter{position:relative;height:14px;background:#11141a;border-radius:7px;margin:10px 0 4px;overflow:hidden}
+.meter .zone{position:absolute;left:40%;width:20%;top:0;bottom:0;background:rgba(62,207,142,.18)}
+.meter .mid{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--sub)}
+.meter .needle{position:absolute;top:1px;bottom:1px;width:8px;margin-left:-4px;border-radius:4px;background:var(--sub);left:50%;transition:left .06s linear}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--sub)}
+canvas{width:100%;height:240px;display:block;background:#11141a;border-radius:10px}
+.target{text-align:center;margin:4px 0 8px}
+.target .t{font-size:40px;font-weight:800}
+.prog{height:8px;background:#11141a;border-radius:4px;overflow:hidden;margin:8px 0}
+.prog div{height:100%;width:0;background:var(--ok);transition:width .08s}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats b{display:block;font-size:22px}
+.msg{text-align:center;min-height:22px;font-weight:700;margin-top:6px}
+.hint{font-size:12px;color:var(--sub);line-height:1.6;margin:8px 0 0}
+.err{color:var(--bad);font-size:13px;line-height:1.6}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>🎤 音程トレーニング</h1>
+
+<div class="tabs">
+  <button data-tab="tuner" class="on">チューナー</button>
+  <button data-tab="drill">音当て練習</button>
+  <button data-tab="file">録音を解析</button>
+</div>
+
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <div class="row">
+      <span class="sub">音域</span>
+      <select id="range">
+        <option value="36,60">低め（ド2〜ド4）</option>
+        <option value="45,64" selected>男性・中（ラ2〜ミ4）</option>
+        <option value="48,72">中〜高（ド3〜ド5）</option>
+        <option value="55,79">女性・高（ソ3〜ソ5）</option>
+      </select>
+    </div>
+    <button class="btn primary" id="micBtn">マイク開始</button>
+  </div>
+  <div id="micErr" class="err"></div>
+</div>
+
+<!-- 共通：現在の音 -->
+<div class="card" id="liveCard">
+  <div class="big"><span class="note" id="noteName">–</span><span class="oct" id="noteSci"></span></div>
+  <div class="cents" id="centsText">声を出すと表示されます</div>
+  <div class="meter"><div class="zone"></div><div class="mid"></div><div class="needle" id="needle"></div></div>
+  <div class="scale"><span>-50 低い</span><span>ぴったり</span><span>高い +50</span></div>
+</div>
+
+<!-- 音当て練習 -->
+<div class="card hide" id="drillCard">
+  <div class="target"><div class="sub">この音を出してください</div><div class="t" id="targetName">–</div></div>
+  <div class="row" style="justify-content:center">
+    <button class="btn" id="playBtn">🔊 お手本</button>
+    <button class="btn primary" id="startDrill">スタート</button>
+    <button class="btn" id="skipBtn">次へ</button>
+  </div>
+  <div class="prog"><div id="holdBar"></div></div>
+  <div class="msg" id="drillMsg"></div>
+  <div class="stats">
+    <div><span class="sub">成功</span><b id="sOk">0</b></div>
+    <div><span class="sub">挑戦</span><b id="sAll">0</b></div>
+    <div><span class="sub">平均ズレ</span><b id="sDev">–</b></div>
+  </div>
+  <p class="hint">±25セント以内を合計1秒キープで成功。8秒たつと次の音へ。お手本の音をマイクが拾わないよう、イヤホン推奨です。</p>
+</div>
+
+<!-- 録音を解析 -->
+<div class="card hide" id="fileCard">
+  <input type="file" id="fileIn" accept="audio/*,video/*" class="btn" style="width:100%">
+  <div class="msg" id="fileMsg"></div>
+  <div class="stats hide" id="fileStats">
+    <div><span class="sub">音程が合っていた割合</span><b id="fIn">–</b></div>
+    <div><span class="sub">平均ズレ</span><b id="fDev">–</b></div>
+    <div><span class="sub">最低〜最高</span><b id="fRange" style="font-size:16px">–</b></div>
+  </div>
+  <p class="hint">スマホのボイスメモ等で録った歌（60秒まで）を読み込むと、音程の推移を表示します。「合っていた割合」は最寄りの半音から±25セント以内だったフレームの割合です。</p>
+</div>
+
+<canvas id="cv"></canvas>
+<p class="hint" id="cvHint">横線が半音（ド〜シ）。点が自分の声の高さ、緑の帯が目標の音です。</p>
+</main>
+
+<script>
+const JP=['ド','ド#','レ','レ#','ミ','ファ','ファ#','ソ','ソ#','ラ','ラ#','シ'];
+const EN=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const $=id=>document.getElementById(id);
+const f2m=f=>69+12*Math.log2(f/440), m2f=m=>440*Math.pow(2,(m-69)/12);
+const nameOf=m=>{const r=Math.round(m);return {jp:JP[(r%12+12)%12],sci:EN[(r%12+12)%12]+(Math.floor(r/12)-1)}};
+
+let range=$('range').value.split(',').map(Number);
+$('range').onchange=()=>{range=$('range').value.split(',').map(Number);draw();if(drill.on)newTarget();};
+
+/* ---------- ピッチ検出（YIN） ---------- */
+function detect(buf,sr){
+  const n=buf.length;let rms=0;for(let i=0;i<n;i++)rms+=buf[i]*buf[i];rms=Math.sqrt(rms/n);
+  if(rms<0.012)return null;
+  const minLag=Math.floor(sr/1000),maxLag=Math.min(Math.floor(sr/65),n>>1),W=n-maxLag;
+  const d=new Float32Array(maxLag+2);
+  for(let t=1;t<=maxLag;t++){let s=0;for(let i=0;i<W;i++){const x=buf[i]-buf[i+t];s+=x*x}d[t]=s}
+  d[0]=1;let run=0;for(let t=1;t<=maxLag;t++){run+=d[t];d[t]=run?d[t]*t/run:1}
+  let tau=-1;
+  for(let t=minLag;t<maxLag;t++){if(d[t]<0.15){while(t+1<maxLag&&d[t+1]<d[t])t++;tau=t;break}}
+  if(tau<0)return null;
+  const a=d[tau-1],b=d[tau],c=d[tau+1],den=a+c-2*b;
+  const tt=den?tau+(a-c)/(2*den):tau;
+  return {f:sr/tt,clarity:1-b};
+}
+
+/* ---------- 描画 ---------- */
+const cv=$('cv'),ctx=cv.getContext('2d');
+let trail=[];            // {t, m} ライブ用
+let fileCurve=null;      // [{t,m}] 解析用
+let mode='tuner';
+function resize(){const r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
+addEventListener('resize',resize);
+function draw(){
+  const W=cv.clientWidth,H=cv.clientHeight;ctx.clearRect(0,0,W,H);
+  const lo=range[0]-1,hi=range[1]+1,y=m=>H-(m-lo)/(hi-lo)*H;
+  ctx.font='10px sans-serif';
+  for(let m=Math.ceil(lo);m<=hi;m++){
+    const nat=[0,2,4,5,7,9,11].includes((m%12+12)%12);
+    ctx.strokeStyle=m%12===0?'#3a4252':nat?'#232833':'#191d25';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(30,y(m));ctx.lineTo(W,y(m));ctx.stroke();
+    if(nat){ctx.fillStyle=m%12===0?'#c9d1de':'#6b7484';ctx.fillText(JP[m%12]+(m%12===0?(Math.floor(m/12)-1):''),2,y(m)+3)}
+  }
+  if(mode==='drill'&&drill.target!=null){
+    const t=drill.target,h=Math.abs(y(t+0.25)-y(t-0.25));
+    ctx.fillStyle='rgba(62,207,142,.22)';ctx.fillRect(30,y(t+0.25),W-30,h);
+  }
+  let pts,t0,t1;
+  if(mode==='file'&&fileCurve){pts=fileCurve;t0=0;t1=Math.max(1,fileCurve.dur)}
+  else{pts=trail;t1=performance.now()/1000;t0=t1-6}
+  const x=t=>30+(t-t0)/(t1-t0)*(W-34);
+  for(const p of pts){
+    if(p.t<t0)continue;
+    const dev=Math.abs(p.m-(mode==='drill'&&drill.target!=null?drill.target:Math.round(p.m)))*100;
+    ctx.fillStyle=dev<=25?'#3ecf8e':dev<=50?'#f5b84b':'#f06a6a';
+    ctx.beginPath();ctx.arc(x(p.t),y(p.m),2.2,0,7);ctx.fill();
+  }
+}
+
+/* ---------- マイク ---------- */
+let ac,an,buf,running=false,hist=[];
+async function startMic(){
+  $('micErr').textContent='';
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    await ac.resume();
+    const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const src=ac.createMediaStreamSource(st);an=ac.createAnalyser();an.fftSize=2048;src.connect(an);
+    buf=new Float32Array(an.fftSize);running=true;$('micBtn').textContent='マイク動作中';$('micBtn').disabled=true;loop();
+  }catch(e){
+    $('micErr').innerHTML='マイクを使えませんでした（'+e.name+'）。<br>この表示画面ではマイクが制限されている可能性があります。ブラウザ（Safari/Chrome）で直接開くか、「録音を解析」タブをお使いください。';
+  }
+}
+$('micBtn').onclick=startMic;
+
+function loop(){
+  if(!running)return;
+  an.getFloatTimeDomainData(buf);
+  const r=detect(buf,ac.sampleRate);const now=performance.now()/1000;
+  let m=null;
+  if(r&&r.clarity>0.8&&r.f>60&&r.f<1100&&!tone.playing){
+    hist.push(f2m(r.f));if(hist.length>5)hist.shift();
+    m=[...hist].sort((a,b)=>a-b)[hist.length>>1];
+    trail.push({t:now,m});
+  }else hist=[];
+  trail=trail.filter(p=>p.t>now-6);
+  showLive(m);
+  if(mode==='drill')drillTick(m,now);
+  if(mode!=='file')draw();
+  requestAnimationFrame(loop);
+}
+function showLive(m){
+  if(m==null){$('noteName').textContent='–';$('noteSci').textContent='';$('centsText').textContent=tone.playing?'お手本再生中…':'声を出すと表示されます';$('needle').style.background='var(--sub)';return}
+  const ref=mode==='drill'&&drill.target!=null?drill.target:Math.round(m);
+  const n=nameOf(Math.round(m)),c=Math.round((m-ref)*100);
+  $('noteName').textContent=n.jp;$('noteSci').textContent=n.sci;
+  const cc=Math.max(-50,Math.min(50,c));
+  $('needle').style.left=(50+cc)+'%';
+  const col=Math.abs(c)<=25?'var(--ok)':Math.abs(c)<=50?'var(--warn)':'var(--bad)';
+  $('needle').style.background=col;
+  $('centsText').textContent=mode==='drill'&&drill.target!=null
+    ?(Math.abs(c)<=25?'いい感じ！':c>0?`目標より ${c} セント高い`:`目標より ${-c} セント低い`)
+    :(c===0?'ぴったり':c>0?`+${c} セント（少し高い）`:`${c} セント（少し低い）`);
+}
+
+/* ---------- お手本音 ---------- */
+const tone={playing:false};
+function playTone(m,sec=1.5){
+  ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume();
+  const o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.value=m2f(m);
+  const t=ac.currentTime;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.05);g.gain.setValueAtTime(.35,t+sec-.15);g.gain.linearRampToValueAtTime(0,t+sec);
+  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+sec);
+  tone.playing=true;setTimeout(()=>{tone.playing=false;hist=[]},sec*1000+150);
+}
+
+/* ---------- 音当て練習 ---------- */
+const drill={on:false,target:null,hold:0,start:0,last:0,ok:0,all:0,devs:[],cur:[]};
+const NAT=[0,2,4,5,7,9,11];
+function newTarget(){
+  const c=[];for(let m=range[0]+2;m<=range[1]-2;m++)if(NAT.includes(m%12))c.push(m);
+  let t;do{t=c[Math.floor(Math.random()*c.length)]}while(c.length>1&&t===drill.target);
+  drill.target=t;drill.hold=0;drill.cur=[];drill.start=performance.now()/1000+1.6;drill.last=0;
+  const n=nameOf(t);$('targetName').innerHTML=n.jp+' <span class="oct">'+n.sci+'</span>';
+  $('holdBar').style.width='0';$('drillMsg').textContent='';
+  playTone(t);draw();
+}
+function finish(success){
+  drill.all++;if(success)drill.ok++;
+  if(drill.cur.length){const a=drill.cur.reduce((s,v)=>s+v,0)/drill.cur.length;drill.devs.push(a)}
+  $('sOk').textContent=drill.ok;$('sAll').textContent=drill.all;
+  $('sDev').textContent=drill.devs.length?Math.round(drill.devs.reduce((s,v)=>s+v,0)/drill.devs.length)+'¢':'–';
+  $('drillMsg').textContent=success?'⭕ 成功！':'⏱ 時間切れ';
+  $('drillMsg').style.color=success?'var(--ok)':'var(--warn)';
+  drill.target=null;setTimeout(()=>{if(drill.on)newTarget()},1200);
+}
+function drillTick(m,now){
+  if(!drill.on||drill.target==null||now<drill.start)return;
+  const dt=drill.last?Math.min(.1,now-drill.last):0;drill.last=now;
+  if(m!=null){
+    const dev=Math.abs(m-drill.target)*100;
+    if(dev<300)drill.cur.push(dev);
+    if(dev<=25)drill.hold+=dt;
+  }
+  $('holdBar').style.width=Math.min(100,drill.hold*100)+'%';
+  if(drill.hold>=1)finish(true);else if(now-drill.start>8)finish(false);
+}
+$('startDrill').onclick=async()=>{if(!running)await startMic();if(!running)return;drill.on=true;$('startDrill').textContent='練習中';$('startDrill').disabled=true;newTarget()};
+$('playBtn').onclick=()=>{if(drill.target!=null){playTone(drill.target);drill.start=performance.now()/1000+1.6;drill.last=0}};
+$('skipBtn').onclick=()=>{if(drill.on){drill.target=null;newTarget()}};
+
+/* ---------- 録音を解析 ---------- */
+$('fileIn').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  $('fileMsg').textContent='読み込み中…';$('fileStats').classList.add('hide');
+  try{
+    const ctx2=new (window.AudioContext||window.webkitAudioContext)();
+    const ab=await ctx2.decodeAudioData(await f.arrayBuffer());
+    const sr=ab.sampleRate,ch=ab.getChannelData(0),dur=Math.min(60,ab.duration);
+    const N=2048,hop=Math.floor(sr*0.025),end=Math.min(ch.length,Math.floor(dur*sr))-N;
+    const out=[];let h=[];
+    for(let i=0;i<end;i+=hop){
+      const r=detect(ch.subarray(i,i+N),sr);
+      if(r&&r.clarity>0.8&&r.f>60&&r.f<1100){h.push(f2m(r.f));if(h.length>5)h.shift();out.push({t:i/sr,m:[...h].sort((a,b)=>a-b)[h.length>>1]})}else h=[];
+      if(out.length%200===0){$('fileMsg').textContent=`解析中… ${Math.round(i/end*100)}%`;await new Promise(r=>setTimeout(r))}
+    }
+    if(!out.length){$('fileMsg').textContent='声の高さを検出できませんでした。';return}
+    fileCurve=out;fileCurve.dur=dur;
+    const ms=out.map(p=>p.m),devs=ms.map(m=>Math.abs(m-Math.round(m))*100);
+    const lo=Math.min(...ms),hi=Math.max(...ms);
+    range=[Math.floor(lo)-1,Math.ceil(hi)+1];
+    $('fIn').textContent=Math.round(devs.filter(d=>d<=25).length/devs.length*100)+'%';
+    $('fDev').textContent=Math.round(devs.reduce((s,v)=>s+v,0)/devs.length)+'¢';
+    const a=nameOf(lo),b=nameOf(hi);$('fRange').textContent=`${a.jp}${a.sci.slice(-1)}〜${b.jp}${b.sci.slice(-1)}`;
+    $('fileStats').classList.remove('hide');$('fileMsg').textContent=`${dur.toFixed(1)}秒を解析しました`;
+    draw();
+  }catch(err){$('fileMsg').textContent='この形式は読み込めませんでした（'+err.name+'）'}
+};
+
+/* ---------- タブ ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  mode=b.dataset.tab;
+  $('drillCard').classList.toggle('hide',mode!=='drill');
+  $('fileCard').classList.toggle('hide',mode!=='file');
+  $('liveCard').classList.toggle('hide',mode==='file');
+  if(mode!=='drill'){drill.on=false;drill.target=null;$('startDrill').textContent='スタート';$('startDrill').disabled=false}
+  if(mode!=='file')range=$('range').value.split(',').map(Number);
+  draw();
+});
+resize();
+</script>
+</body>
+</html>
