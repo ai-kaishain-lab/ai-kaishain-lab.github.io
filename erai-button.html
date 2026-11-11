@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>えらいボタン｜会社員のAI実験室</title>
+<meta name="description" content="押すとほめられるだけのボタン。連打すると、ほめ方がだんだん雑になります。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="えらいボタン｜会社員のAI実験室">
+<meta property="og:description" content="押すとほめられるだけのボタン。連打すると、ほめ方がだんだん雑になります。">
+<meta property="og:url" content="https://ai-kaishain-lab.github.io/erai-button.html">
+<meta property="og:image" content="https://ai-kaishain-lab.github.io/og-erai-button.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+<style>
+/* レイアウト: 方眼ノートの1画面。上にほめ言葉、中央に判子ボタン、下にやる気メーターと今日の回数 */
+:root {
+  --paper: #eef3f6;
+  --line: #d6e1e8;
+  --ink: #1f2d3a;
+  --sub: #5a6c7a;
+  --card: #ffffff;
+  --stamp: #d8362b;
+  --stamp-deep: #a92219;
+  --stamp-ink: #fff6f3;
+  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15221e;
+    --line: #20332d;
+    --ink: #e9efe9;
+    --sub: #9db0a7;
+    --card: #1c2d28;
+    --stamp: #e9503f;
+    --stamp-deep: #b8301f;
+    --stamp-ink: #fff6f3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15221e;
+  --line: #20332d;
+  --ink: #e9efe9;
+  --sub: #9db0a7;
+  --card: #1c2d28;
+  --stamp: #e9503f;
+  --stamp-deep: #b8301f;
+  --stamp-ink: #fff6f3;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+main {
+  height: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 20px 20px 16px;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto auto;
+  gap: 20px;
+}
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+.today {
+  margin: 0;
+  font-size: 14px;
+  color: var(--sub);
+  font-variant-numeric: tabular-nums;
+}
+.today strong {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--ink);
+  margin: 0 2px;
+}
+
+.speech {
+  align-self: center;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 20px 18px;
+  min-height: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+.speech::after {
+  content: "";
+  position: absolute;
+  bottom: -11px;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  background: var(--card);
+  border-right: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  transform: translateX(-50%) rotate(45deg);
+}
+#msg {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.6;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  transition: transform .12s ease-out;
+}
+#msg.t0 { font-size: 20px; }
+#msg.t1 { font-size: 26px; }
+#msg.t2 { font-size: 22px; transform: rotate(-2deg); }
+#msg.t3 { font-size: 18px; transform: rotate(4deg); opacity: .8; }
+#msg.t4 { font-size: 15px; transform: rotate(-7deg); opacity: .55; font-weight: 400; font-family: var(--font-body); }
+
+.press-wrap { display: flex; justify-content: center; }
+#press {
+  width: 196px;
+  height: 196px;
+  border-radius: 50%;
+  border: none;
+  background: var(--stamp);
+  color: var(--stamp-ink);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 44px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 8px var(--stamp),
+    inset 0 0 0 11px var(--stamp-ink),
+    0 10px 0 var(--stamp-deep);
+  transform: translateY(0);
+  transition: transform .06s ease-out, box-shadow .06s ease-out;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#press:active, #press.down {
+  transform: translateY(8px);
+  box-shadow:
+    inset 0 0 0 8px var(--stamp),
+    inset 0 0 0 11px var(--stamp-ink),
+    0 2px 0 var(--stamp-deep);
+}
+#press:focus-visible { outline: 3px solid var(--ink); outline-offset: 6px; }
+
+.meter { display: grid; gap: 6px; }
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--sub);
+}
+.meter-head b {
+  font-family: var(--font-display);
+  color: var(--ink);
+  font-size: 14px;
+}
+.bar {
+  height: 12px;
+  border-radius: 6px;
+  border: 2px solid var(--ink);
+  background: var(--card);
+  overflow: hidden;
+}
+#fill {
+  height: 100%;
+  width: 100%;
+  background: var(--stamp);
+  transition: width .25s ease-out;
+}
+.back { margin: 0; text-align: center; font-size: 12px; }
+.back a { color: var(--sub); }
+@media (prefers-reduced-motion: reduce) {
+  #msg, #press, #fill { transition: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>えらいボタン</h1>
+    <p class="today">今日<strong id="count">0</strong>回ほめられた</p>
+  </header>
+
+  <div class="speech">
+    <p id="msg" class="t0" aria-live="polite">押すと、ほめます。<br>連打すると、ほめ方が雑になります。</p>
+  </div>
+
+  <div class="press-wrap">
+    <button id="press" type="button" aria-label="ほめてもらう">ほめて</button>
+  </div>
+
+  <div class="meter">
+    <div class="meter-head">
+      <span>ほめ係のやる気</span>
+      <b id="mood">ていねい 100%</b>
+    </div>
+    <div class="bar"><div id="fill"></div></div>
+  </div>
+
+  <p class="back"><a href="tools.html">← 会社員のAI実験室の道具箱にもどる</a></p>
+</main>
+
+<script>
+(function () {
+  var TIERS = [
+    { upTo: 3, mood: "ていねい", msgs: [
+      "えらい！今日もちゃんと起きて、ここまで来ました。立派です。",
+      "えらいです。あなたの頑張りは、ちゃんと見ています。",
+      "本当にえらい。息をして、ボタンまで押せました。満点です。",
+      "えらい！その調子で、無理せずいきましょう。",
+      "えらい。今日ここにいるだけで、もう十分な成果です。",
+      "えらいです。誰も見ていないところで頑張っているの、知っています。",
+      "えらい！ほめられに来るという判断が、まず正しいです。",
+      "すばらしい。その指の運び、迷いがありませんでした。",
+      "えらいです。昨日のあなたより、ボタン1回ぶん前に進みました。",
+      "えらい！疲れているのに画面を開けた。それだけで合格です。",
+      "本当にえらい。ちゃんと休むのも、ちゃんと働くのも、どちらも才能です。",
+      "えらいです。あなたがいると、世の中が少しだけ回りやすくなります。"
+    ]},
+    { upTo: 8, mood: "ふつう", msgs: [
+      "えらい！", "えらいね。", "うん、えらい。", "えらいえらい。", "よくできました。",
+      "いいね、えらい。", "さすが。", "やるじゃん。", "えらいと思う。", "今日もえらい。",
+      "お見事。", "ナイス。", "たいしたもんだ。", "花丸です。"
+    ]},
+    { upTo: 15, mood: "雑", msgs: [
+      "はいはい、えらい。", "えら。", "えらいってば。", "さっきも言ったよ。", "えらい（棒読み）",
+      "うんうん、えらいえらい。", "えらいんじゃない？", "まあ、えらい。", "えらいで合ってる？",
+      "同上。", "以下同文。", "えらい、たぶん。", "わかったわかった。", "えらい（3回目くらい）"
+    ]},
+    { upTo: 30, mood: "かなり雑", msgs: [
+      "え。", "うん。", "えらえら。", "ｴﾗｲ", "はい。", "すごいすごい。",
+      "ら。", "い。", "えｒ", "ほい。", "あー、うん。", "それな。", "おつ。", "へえ。",
+      "（うなずく）", "えらい的なやつ。"
+    ]}
+  ];
+  var LIMIT = 31;
+  var THANKS = [
+    "……え、私を？",
+    "もう一回、言ってください。",
+    "えへへ。",
+    "元気が出てきました。",
+    "復活しました！ほめてくれたあなたが、いちばんえらい。"
+  ];
+  var REST_MS = 4000;
+
+  var msgEl = document.getElementById("msg");
+  var countEl = document.getElementById("count");
+  var moodEl = document.getElementById("mood");
+  var fillEl = document.getElementById("fill");
+  var btn = document.getElementById("press");
+
+  var combo = 0, lastPress = 0, lastMsg = "", restTimer = null;
+
+  function todayKey() {
+    var d = new Date();
+    return "erai-" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function loadCount() {
+    try { return parseInt(localStorage.getItem(todayKey()), 10) || 0; } catch (e) { return 0; }
+  }
+  function saveCount(n) {
+    try { localStorage.setItem(todayKey(), String(n)); } catch (e) {}
+  }
+  var count = loadCount();
+  countEl.textContent = count;
+
+  function tierIndex(n) {
+    for (var i = 0; i < TIERS.length; i++) if (n <= TIERS[i].upTo) return i;
+    return TIERS.length - 1;
+  }
+  function motivation(n) {
+    return Math.max(0, Math.round(100 - (n - 1) * 3.3));
+  }
+  function pick(list) {
+    var m;
+    do { m = list[Math.floor(Math.random() * list.length)]; } while (list.length > 1 && m === lastMsg);
+    lastMsg = m;
+    return m;
+  }
+  function showMeter(n) {
+    var pct = n <= 0 ? 100 : motivation(n);
+    var mood = TIERS[tierIndex(Math.max(n, 1))].mood;
+    moodEl.textContent = mood + " " + pct + "%";
+    fillEl.style.width = pct + "%";
+  }
+
+  var reverse = 0;
+
+  function startReverse() {
+    clearTimeout(restTimer);
+    reverse = 1;
+    msgEl.className = "t0";
+    msgEl.textContent = "もう限界です。今度は、あなたが私をほめてください。";
+    btn.textContent = "えらい";
+    btn.setAttribute("aria-label", "ほめ係をほめる");
+    moodEl.textContent = "燃えつきた 0%";
+    fillEl.style.width = "0%";
+  }
+
+  function pressReverse() {
+    var i = reverse - 1;
+    var pct = Math.round((i + 1) / THANKS.length * 100);
+    msgEl.className = "t0";
+    msgEl.textContent = THANKS[i];
+    moodEl.textContent = (pct < 100 ? "回復中 " : "ていねい ") + pct + "%";
+    fillEl.style.width = pct + "%";
+    reverse++;
+    if (i === THANKS.length - 1) {
+      reverse = 0;
+      combo = 0;
+      lastPress = 0;
+      btn.textContent = "ほめて";
+      btn.setAttribute("aria-label", "ほめてもらう");
+    }
+  }
+
+  function press() {
+    if (reverse > 0) { pressReverse(); return; }
+    var now = Date.now();
+    var recovered = false;
+    if (now - lastPress > REST_MS) {
+      recovered = combo >= 9;
+      combo = 0;
+    }
+    lastPress = now;
+    combo++;
+    count++;
+    countEl.textContent = count;
+    saveCount(count);
+
+    if (combo >= LIMIT) { startReverse(); return; }
+
+    var t = tierIndex(combo);
+    var text = pick(TIERS[t].msgs);
+    if (recovered) text = "（ほめ係が復活しました）" + text;
+    msgEl.className = "t" + t;
+    msgEl.textContent = text;
+    showMeter(combo);
+
+    clearTimeout(restTimer);
+    restTimer = setTimeout(function () { showMeter(0); }, REST_MS);
+  }
+
+  btn.addEventListener("click", press);
+})();
+</script>
+</body>
+</html>
