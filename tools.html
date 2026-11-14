@@ -19,13 +19,15 @@ main{max-width:760px;margin:0 auto;padding:40px 18px 56px}
 .tag{display:inline-block;background:var(--fg);color:var(--bg);font-weight:700;font-size:13px;padding:4px 12px;border-radius:8px;letter-spacing:.06em}
 h1{font-size:30px;margin:12px 0 6px}
 .lead{color:var(--muted);margin:0 0 28px}
-.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.card{position:relative;display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
 .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(31,42,54,.12)}
 .card img{display:block;width:100%;height:auto;aspect-ratio:1200/630;object-fit:cover;border-bottom:1px solid var(--line)}
 .body{padding:16px 18px 18px}
 .body h2{font-size:21px;margin:0 0 4px}
 .body p{margin:0;color:var(--muted);font-size:15px}
-.go{display:inline-block;margin-top:10px;color:var(--acc);font-weight:700}
+.go{display:inline-block;margin-top:10px;color:var(--acc);font-weight:700;text-decoration:none}
+.go::after{content:"";position:absolute;inset:0}
+.note{position:relative;z-index:1;display:inline-block;margin:10px 0 0 18px;font-size:14px;color:var(--muted)}
 .list{display:grid;gap:18px}
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 footer a{color:var(--fg);margin-right:16px}
@@ -37,26 +39,26 @@ footer a{color:var(--fg);margin-right:16px}
 <h1>道具箱</h1>
 <p class="lead">AIと一緒に作った道具を置いています。インストールは不要で、ブラウザで開くだけで使えます。</p>
 <div class="list">
-<a class="card" href="globe.html">
+<div class="card">
 <img src="og-globe.png" alt="回せる地球儀" loading="lazy">
-<div class="body"><h2>回せる地球儀</h2><p>平面だと歪む世界地図を、ドラッグで回せる地球儀に。拡大すると国名が出て、国名検索でその国まで回ります。スマホは指で回せます。</p><span class="go">開く →</span></div>
-</a>
-<a class="card" href="guitar-2chord.html">
+<div class="body"><h2>回せる地球儀</h2><p>平面だと歪む世界地図を、ドラッグで回せる地球儀に。拡大すると国名が出て、国名検索でその国まで回ります。スマホは指で回せます。</p><a class="go" href="globe.html">開く →</a></div>
+</div>
+<div class="card">
 <img src="og-guitar-2chord.png" alt="2コード曲さがし" loading="lazy">
-<div class="body"><h2>2コード曲さがし</h2><p>ギターを教える人のための道具。コードを2つタップすると、その2つだけで弾ける曲が指の移動が少ない順に並びます。インストール不要・ブラウザで開くだけで、レッスン中にスマホからすぐ使えます。</p><span class="go">開く →</span></div>
-</a>
-<a class="card" href="ito-odai-maker/">
+<div class="body"><h2>2コード曲さがし</h2><p>ギターを教える人のための道具。コードを2つタップすると、その2つだけで弾ける曲が指の移動が少ない順に並びます。インストール不要・ブラウザで開くだけで、レッスン中にスマホからすぐ使えます。</p><a class="go" href="guitar-2chord.html">開く →</a></div>
+</div>
+<div class="card">
 <img src="og-ito.png" alt="数字で語れ！お題メーカー" loading="lazy">
-<div class="body"><h2>数字で語れ！お題メーカー</h2><p>カードゲーム「ito」で遊ぶときのお題ジェネレーター（非公式）。オリジナルのお題と「場面×ものさし」の組み合わせで毎回ちがうお題が出ます。1〜100の数字配りと答え合わせも、スマホ1台でできます。</p><span class="go">開く →</span></div>
-</a>
-<a class="card" href="cost-per-use.html">
+<div class="body"><h2>数字で語れ！お題メーカー</h2><p>カードゲーム「ito」で遊ぶときのお題ジェネレーター（非公式）。オリジナルのお題と「場面×ものさし」の組み合わせで毎回ちがうお題が出ます。1〜100の数字配りと答え合わせも、スマホ1台でできます。</p><a class="go" href="ito-odai-maker/">開く →</a></div>
+</div>
+<div class="card">
 <img src="og-cost-per-use.png" alt="1回あたりいくら？電卓" loading="lazy">
-<div class="body"><h2>1回あたりいくら？電卓</h2><p>安いのと高いの、結局どっちがおトク？値段・もった期間・使う回数を入れると「1回あたりの値段」で比べられます。高いほうが何か月もてば元が取れるかも分かります。</p><span class="go">開く →</span></div>
-</a>
-<a class="card" href="erai-button.html">
+<div class="body"><h2>1回あたりいくら？電卓</h2><p>安いのと高いの、結局どっちがおトク？値段・もった期間・使う回数を入れると「1回あたりの値段」で比べられます。高いほうが何か月もてば元が取れるかも分かります。</p><a class="go" href="cost-per-use.html">開く →</a></div>
+</div>
+<div class="card">
 <img src="og-erai-button.png" alt="えらいボタン" loading="lazy">
-<div class="body"><h2>えらいボタン</h2><p>押すとほめられるだけのボタン。連打すると、ほめ方がだんだん雑になります。最後まで連打すると何かが起きます。</p><span class="go">開く →</span></div>
-</a>
+<div class="body"><h2>えらいボタン</h2><p>押すとほめられるだけのボタン。連打すると、ほめ方がだんだん雑になります。最後まで連打すると何かが起きます。</p><a class="go" href="erai-button.html">開く →</a><a class="note" href="https://note.com/hideai_lab/n/n7ac45b550006" target="_blank" rel="noopener">このアプリについてのnote</a></div>
+</div>
 </div>
 <footer>
 <a href="https://www.instagram.com/ai_kaishain_lab/" target="_blank" rel="noopener">Instagram</a><a href="https://www.youtube.com/@ai_kaishain_lab" target="_blank" rel="noopener">YouTube</a><a href="https://note.com/hideai_lab" target="_blank" rel="noopener">note</a>
