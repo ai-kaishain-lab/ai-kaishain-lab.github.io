@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>body{margin:0;font-size:14px}[hidden]{display:none!important}</style>
 <title>回せる地球儀</title>
 <meta name="description" content="平面だと歪む世界地図を、ドラッグで回せる地球儀に。拡大すると国名が出て、国名検索でその国まで回ります。会社員のAI実験室がAIと作りました。">
 <meta property="og:type" content="website">
@@ -14,26 +13,24 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="lab.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: full-screen canvas globe, a slim instrument bar on top, a readout card bottom-left */
 :root{
-  --bg:#e9eef2; --ocean:#cfdde8; --ocean-edge:#9fb6c7; --land:#f7f5ef; --land-hi:#e3a33b;
-  --border:#8a9aa6; --grid:rgba(40,70,95,.16); --fg:#1d2a33; --muted:#5d6d78; --panel:rgba(255,255,255,.86);
-  --line:rgba(29,42,51,.14); --accent:#c2541f;
-  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  /* 共通トークン（lab.css）を、このページで使う名前に割り当てる */
+  --bg:var(--paper-instrument); --fg:var(--ink); --muted:var(--ink-muted); --land-hi:var(--highlight);
+  --f-display:var(--font-sans); --f-mono:var(--font-mono);
+  /* 地球儀だけで使う地図の色 */
+  --ocean:#cfdde8; --ocean-edge:#9fb6c7; --land:#f7f5ef; --border:#8a9aa6;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0b1117; --ocean:#122333; --ocean-edge:#2c4d66; --land:#33424d; --land-hi:#e6a540;
-  --border:#5f7584; --grid:rgba(150,190,220,.12); --fg:#e3eaef; --muted:#8fa1ad; --panel:rgba(15,24,32,.86);
-  --line:rgba(227,234,239,.14); --accent:#f08a4b; color-scheme:dark}}
+  --ocean:#122333; --ocean-edge:#2c4d66; --land:#33424d; --border:#5f7584}}
 :root[data-theme="dark"]{
-  --bg:#0b1117; --ocean:#122333; --ocean-edge:#2c4d66; --land:#33424d; --land-hi:#e6a540;
-  --border:#5f7584; --grid:rgba(150,190,220,.12); --fg:#e3eaef; --muted:#8fa1ad; --panel:rgba(15,24,32,.86);
-  --line:rgba(227,234,239,.14); --accent:#f08a4b; color-scheme:dark}
+  --ocean:#122333; --ocean-edge:#2c4d66; --land:#33424d; --border:#5f7584}
 html,body{height:100%}
-body{background:var(--bg);color:var(--fg);font-family:var(--f-display);overflow:hidden;
+body{margin:0;font-size:14px;line-height:normal;background:var(--bg);color:var(--fg);font-family:var(--f-display);overflow:hidden;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .app{position:relative;height:100%;display:flex;flex-direction:column;gap:10px;padding-block:12px;box-sizing:border-box}
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;z-index:2}
@@ -43,7 +40,7 @@ input,button{font:inherit;font-size:14px;color:var(--fg);background:var(--panel)
 input{width:100%;box-sizing:border-box}
 button{cursor:pointer}
 button:hover{border-color:var(--accent)}
-button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+button[aria-pressed="true"]{background:var(--accent-strong);color:var(--on-accent);border-color:var(--accent-strong)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .stage{position:relative;flex:1;min-height:0}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}

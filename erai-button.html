@@ -13,56 +13,37 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="lab.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
 <style>
 /* レイアウト: 方眼ノートの1画面。上にほめ言葉、中央に判子ボタン、下にやる気メーターと今日の回数 */
 :root {
-  --paper: #eef3f6;
-  --line: #d6e1e8;
-  --ink: #1f2d3a;
-  --sub: #5a6c7a;
-  --card: #ffffff;
+  /* 共通トークン（lab.css）を、このページで使う名前に割り当てる */
+  --paper-local: var(--paper-instrument);
+  --sub: var(--ink-muted);
+  --card: var(--surface);
+  --font-display: var(--font-maru);
+  --font-body: var(--font-sans);
+  /* 判子の赤は「えらいボタン」だけの例外色 */
   --stamp: #d8362b;
   --stamp-deep: #a92219;
   --stamp-ink: #fff6f3;
-  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
-  --font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #15221e;
-    --line: #20332d;
-    --ink: #e9efe9;
-    --sub: #9db0a7;
-    --card: #1c2d28;
-    --stamp: #e9503f;
-    --stamp-deep: #b8301f;
-    --stamp-ink: #fff6f3;
-    color-scheme: dark;
-  }
+  :root:not([data-theme="light"]) { --stamp: #e9503f; --stamp-deep: #b8301f; }
 }
-:root[data-theme="dark"] {
-  --paper: #15221e;
-  --line: #20332d;
-  --ink: #e9efe9;
-  --sub: #9db0a7;
-  --card: #1c2d28;
-  --stamp: #e9503f;
-  --stamp-deep: #b8301f;
-  --stamp-ink: #fff6f3;
-  color-scheme: dark;
-}
+:root[data-theme="dark"] { --stamp: #e9503f; --stamp-deep: #b8301f; }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
-  background-color: var(--paper);
+  background-color: var(--paper-local);
   background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 24px 24px;
   color: var(--ink);
   font-family: var(--font-body);

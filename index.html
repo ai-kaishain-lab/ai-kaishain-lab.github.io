@@ -11,29 +11,27 @@
 <meta property="og:url" content="https://ai-kaishain-lab.github.io/">
 <meta property="og:image" content="https://ai-kaishain-lab.github.io/og-globe.png">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="lab.css">
 <style>
-  :root{--bg:#F6F3EE;--fg:#1F2A36;--muted:#5B6570;--acc:#D9622B;--line:rgba(31,42,54,.14)}
-  body { font-family: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif; max-width: 720px; margin: 0 auto; padding: 36px 18px 48px; line-height: 1.8; color: var(--fg); background: var(--bg); }
-  h1 { font-size: 1.8rem; margin: .3rem 0 .4rem; } h2 { font-size: 1.2rem; margin-top: 2.4rem; } h3 { font-size: 1rem; margin-top: 1.4rem; }
-  .tag{display:inline-block;background:var(--fg);color:var(--bg);font-weight:700;font-size:13px;padding:4px 12px;border-radius:8px;letter-spacing:.06em}
-  .lead{color:var(--muted)}
-  .toolbox{display:block;margin:22px 0 8px;padding:20px 22px;background:#fff;border:1px solid var(--line);border-radius:16px;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
-  .toolbox:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(31,42,54,.12)}
-  .toolbox strong{font-size:1.25rem} .toolbox span{display:block;color:var(--muted);font-size:.95rem} .toolbox em{font-style:normal;color:var(--acc);font-weight:700}
-  .sns a{margin-right:16px;color:var(--fg)}
-  section.insights{margin-top:2.6rem;padding-top:.4rem;border-top:1px solid var(--line);font-size:.95rem}
-  footer { margin-top: 2.6rem; font-size: .85rem; color: var(--muted); }
-  a { color: #1a5fb4; }
+  .sns a { color: var(--ink); }
+  section.insights { margin-top: 2.6rem; padding-top: .4rem; border-top: 1px solid var(--line); font-size: 15px; }
+  section.insights h2 { margin-top: 1.4rem; }
+  .lab-footer p { margin: 0; }
 </style>
 </head>
 <body>
-<span class="tag">会社員のAI実験室</span>
+<main class="lab-page lab-page--read">
+<span class="lab-tag">会社員のAI実験室</span>
 <h1>会社員のAI実験室</h1>
-<p class="lead">企画職の会社員が、仕事や暮らしの「面倒くさい」をAIで減らす実験を記録しています。実験の様子は、InstagramとYouTubeの短い動画や、noteの記事で発信しています。</p>
+<p class="lab-lead">企画職の会社員が、仕事や暮らしの「面倒くさい」をAIで減らす実験を記録しています。実験の様子は、InstagramとYouTubeの短い動画や、noteの記事で発信しています。</p>
 
-<a class="toolbox" href="tools.html"><strong>道具箱</strong><span>AIと一緒に作った道具を置いています。インストールは不要で、ブラウザで開くだけで使えます（例：回せる地球儀）。</span><em>道具箱を開く →</em></a>
+<a class="lab-card lab-card--text" href="tools.html"><h2 class="lab-card__title">道具箱</h2><p class="lab-card__desc">AIと一緒に作った道具を置いています。インストールは不要で、ブラウザで開くだけで使えます（例：回せる地球儀）。</p><span class="lab-card__go">道具箱を開く →</span></a>
 
-<p class="sns"><a href="https://www.instagram.com/ai_kaishain_lab/" target="_blank" rel="noopener">Instagram</a><a href="https://www.youtube.com/@ai_kaishain_lab" target="_blank" rel="noopener">YouTube</a><a href="https://note.com/hideai_lab" target="_blank" rel="noopener">note</a></p>
+<p class="lab-links sns"><a href="https://www.instagram.com/ai_kaishain_lab/" target="_blank" rel="noopener">Instagram</a><a href="https://www.youtube.com/@ai_kaishain_lab" target="_blank" rel="noopener">YouTube</a><a href="https://note.com/hideai_lab" target="_blank" rel="noopener">note</a></p>
 
 <section class="insights">
 <h2>AI実験室インサイト（運営者用ツール）</h2>
@@ -60,8 +58,9 @@
 <p>English: "AI Lab Insights" is a personal, single-user tool that reads aggregate analytics (read-only) for the operator's own YouTube channel and Instagram account and stores them in the operator's own spreadsheet. It is not offered to the public.</p>
 </section>
 
-<footer>
+<footer class="lab-footer">
 <p>お問い合わせ：Instagram <a href="https://www.instagram.com/ai_kaishain_lab/">@ai_kaishain_lab</a> のDMまで</p>
 </footer>
+</main>
 </body>
 </html>
