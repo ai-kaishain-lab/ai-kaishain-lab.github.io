@@ -115,6 +115,7 @@ a.lab-tag:hover { opacity: .88; }
   font-size: 14px; color: var(--ink-muted);
 }
 .lab-footer a { color: var(--ink); }
+.lab-footer .lab-copy, .lab-copy { margin: var(--space-18) 0 0; font-size: 12px; color: var(--ink-muted); }
 .lab-links { display: flex; flex-wrap: wrap; gap: var(--space-8) 16px; }
 
 /* ---------- 道具箱にもどるリンク ---------- */
