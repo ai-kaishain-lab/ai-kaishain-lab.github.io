@@ -1,0 +1,602 @@
+<!doctype html>
+<!-- © 2026 会社員のAI実験室 https://ai-kaishain-lab.github.io/ -->
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>飲み会ネタバトル｜会社員のAI実験室</title>
+<meta name="description" content="飲み会で1台のスマホを回して遊ぶ、値段当てと年代当ての予想ゲーム。会社員のAI実験室がAIと作りました。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="飲み会ネタバトル｜会社員のAI実験室">
+<meta property="og:description" content="身近なものの「今の値段」と、有名な出来事の「年」を当てるゲーム。スマホ1台を回すだけ、点数で競うのでお酒のペースは自由です。">
+<meta property="og:url" content="https://ai-kaishain-lab.github.io/nomikai-battle.html">
+<meta property="og:image" content="https://ai-kaishain-lab.github.io/og-nomikai-battle.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="lab.css">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF7E8; --bg2:#FFEDC9; --card:#FFFFFF; --card2:#FFF1D6;
+    --ink:#2B2118; --ink2:#6B5D4F; --line:#EAD9B8;
+    --accent:#E4572E; --accent-ink:#fff; --mustard:#F2A900; --teal:#0F766E; --teal-bg:#E0F2F0;
+    --good:#15803D; --shadow:0 10px 30px rgba(90,55,0,.12);
+    --radius:20px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1C1712; --bg2:#2A2118; --card:#2A231C; --card2:#332A20; --ink:#FFF3DD; --ink2:#CBB99E; --line:#4A3D2E; --teal-bg:#143A36; --shadow:0 10px 30px rgba(0,0,0,.4); }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:"Noto Sans JP",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-tap-highlight-color:transparent}
+  button,[role="button"],select,input:not([type="checkbox"]){min-height:44px}
+  button{font-family:inherit;cursor:pointer}
+  .wrap{max-width:720px;margin:0 auto;padding:18px 16px 48px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:15px}
+  .brand-mark{width:40px;height:40px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:20px;flex:none}
+  .pill{font-size:12px;font-weight:700;background:var(--card2);border:1px solid var(--line);padding:6px 10px;border-radius:999px;color:var(--ink2);white-space:nowrap}
+  h1{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:clamp(28px,7vw,42px);line-height:1.25;margin:6px 0 8px;letter-spacing:.01em}
+  h1 .hl{color:var(--accent)}
+  .lead{color:var(--ink2);font-size:15px;margin:0 0 18px}
+  .note-bar{display:flex;gap:10px;align-items:flex-start;background:var(--teal-bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13.5px;margin-bottom:20px}
+  .note-bar b{color:var(--teal)}
+  /* game cards */
+  .games{display:grid;gap:14px}
+  @media(min-width:560px){.games{grid-template-columns:1fr 1fr}}
+  .game-card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px;text-align:left;width:100%;box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
+  .game-card:active{transform:scale(.985)}
+  .game-card.selected{border-color:var(--accent);outline:3px solid color-mix(in srgb, var(--accent) 25%, transparent)}
+  .game-emoji{font-size:38px;line-height:1;margin-bottom:10px}
+  .game-card h2{font-family:"Zen Maru Gothic",sans-serif;font-size:20px;margin:0 0 6px;font-weight:900}
+  .game-card p{margin:0;color:var(--ink2);font-size:13.5px}
+  .game-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .tag{font-size:11.5px;font-weight:700;background:var(--bg2);padding:4px 8px;border-radius:999px}
+  /* setup */
+  .panel{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-top:18px}
+  .panel h3{font-family:"Zen Maru Gothic",sans-serif;margin:0 0 4px;font-size:17px;font-weight:900}
+  .panel .sub{color:var(--ink2);font-size:13px;margin:0 0 14px}
+  .count-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .count-btn{flex:1;min-width:52px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;font-weight:900;font-size:16px;padding:10px}
+  .count-btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .name-grid{display:grid;gap:8px}
+  @media(min-width:560px){.name-grid{grid-template-columns:1fr 1fr}}
+  .name-grid label{font-size:12px;font-weight:700;color:var(--ink2);display:block}
+  .name-grid input{width:100%;margin-top:4px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:16px;font-family:inherit}
+  .rounds-row{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;font-weight:700}
+  .rounds-row select{border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 10px;font-size:15px;font-weight:700}
+  .cta{width:100%;margin-top:16px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:14px;font-size:17px;font-weight:900;padding:15px;font-family:"Zen Maru Gothic",sans-serif;box-shadow:0 8px 20px rgba(228,87,46,.35)}
+  .cta:disabled{opacity:.45;box-shadow:none}
+  .cta.secondary{background:var(--card);color:var(--ink);border:1.5px solid var(--line);box-shadow:none;font-size:15px}
+  .cta.teal{background:var(--teal);box-shadow:0 8px 20px rgba(15,118,110,.3)}
+  .howto{margin-top:18px;background:var(--card2);border-radius:var(--radius);padding:16px 18px}
+  .howto h3{font-family:"Zen Maru Gothic",sans-serif;margin:0 0 8px;font-size:15px}
+  .howto ol{margin:0;padding-left:20px;font-size:13.5px;color:var(--ink2)}
+  .howto li{margin:4px 0}
+  .foot{margin-top:22px;font-size:12px;color:var(--ink2);text-align:center;line-height:1.7}
+  /* play screens */
+  .screen{display:none}
+  .screen.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){.screen.active{animation:none}}
+  .progress{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .progress-track{flex:1;height:10px;background:var(--card2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .progress-fill{height:100%;background:var(--mustard);border-radius:999px;transition:width .3s}
+  .progress-txt{font-size:13px;font-weight:900;white-space:nowrap}
+  .score-strip{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .score-chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12.5px;font-weight:700}
+  .score-chip.lead-chip{border-color:var(--mustard);background:var(--card2)}
+  .qcard{background:var(--card);border:1.5px solid var(--line);border-radius:24px;padding:26px 20px;text-align:center;box-shadow:var(--shadow)}
+  .q-emoji{font-size:64px;line-height:1.1}
+  .q-cat{font-size:12px;font-weight:900;letter-spacing:.08em;color:var(--accent);margin-top:8px}
+  .q-name{font-family:"Zen Maru Gothic",sans-serif;font-size:clamp(22px,6vw,30px);font-weight:900;line-height:1.35;margin:6px 0}
+  .q-desc{color:var(--ink2);font-size:14px;margin:0 auto;max-width:420px}
+  .turn-banner{text-align:center;margin:18px 0 4px}
+  .turn-banner .who{font-family:"Zen Maru Gothic",sans-serif;font-size:20px;font-weight:900}
+  .turn-banner p{color:var(--ink2);font-size:13px;margin:2px 0 0}
+  .pass-card{background:var(--card);border:1.5px dashed var(--line);border-radius:24px;padding:34px 20px;text-align:center}
+  .pass-card .big{font-size:44px}
+  .guess-box{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:14px;box-shadow:var(--shadow)}
+  .guess-display{text-align:center;font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:44px;line-height:1.1}
+  .guess-display small{font-size:18px;color:var(--ink2)}
+  input[type=range]{width:100%;accent-color:var(--accent);height:36px}
+  .range-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);font-weight:700}
+  .quick-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  .quick-row button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;min-height:36px}
+  .num-row{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:12px}
+  .num-row input{width:130px;text-align:center;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px;font-size:18px;font-weight:900;font-family:inherit}
+  /* reveal */
+  .answer-hero{text-align:center;background:var(--ink);color:var(--bg);border-radius:24px;padding:24px 18px;box-shadow:var(--shadow)}
+  .answer-hero .a-label{font-size:12.5px;font-weight:900;letter-spacing:.1em;opacity:.75}
+  .answer-hero .a-value{font-family:"Zen Maru Gothic",sans-serif;font-size:clamp(38px,10vw,54px);font-weight:900;line-height:1.15}
+  .answer-hero .a-trivia{font-size:13.5px;opacity:.9;max-width:440px;margin:6px auto 0}
+  .rank-list{display:grid;gap:8px;margin-top:14px}
+  .rank-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px}
+  .rank-row.first{border-color:var(--mustard);background:var(--card2)}
+  .rank-num{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:18px;width:30px;text-align:center;flex:none}
+  .rank-main{flex:1;min-width:0}
+  .rank-main .nm{font-weight:900;font-size:15px}
+  .rank-main .dt{font-size:12.5px;color:var(--ink2)}
+  .rank-pts{text-align:right;flex:none}
+  .rank-pts .pt{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:19px;color:var(--accent)}
+  .rank-pts .pt small{font-size:11px;color:var(--ink2)}
+  .rank-pts .diff{font-size:11.5px;color:var(--ink2);font-weight:700}
+  .exact-badge{display:inline-block;background:var(--good);color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+  /* final */
+  .winner{text-align:center;padding:10px 0 4px}
+  .winner .crown{font-size:56px}
+  .winner h2{font-family:"Zen Maru Gothic",sans-serif;font-size:26px;margin:4px 0}
+  .winner .title-badge{display:inline-block;background:var(--mustard);color:#3A2A00;font-weight:900;font-size:14px;border-radius:999px;padding:6px 14px}
+  .btn-row{display:grid;gap:10px;margin-top:16px}
+  @media(min-width:560px){.btn-row{grid-template-columns:1fr 1fr}}
+  .quit{background:none;border:none;color:var(--ink2);font-size:13px;font-weight:700;text-decoration:underline;padding:10px;width:100%}
+</style>
+<style>
+/* ===== 道具箱デザイン合わせ：配色は共通スタイル lab.css のトークンに寄せる ===== */
+:root{
+  --bg:var(--paper); --bg2:var(--tint-cool); --card:var(--surface); --card2:var(--paper);
+  --ink2:var(--ink-muted);
+  --accent:var(--accent-strong); --accent-ink:var(--on-accent);
+  --mustard:var(--highlight); --teal:var(--link); --teal-bg:var(--tint-cool);
+  --good:var(--ok); --shadow:var(--shadow-lift); --radius:var(--radius-xl);
+}
+body{font-family:var(--font-sans)}
+.cta{box-shadow:var(--shadow-lift)}
+.cta.teal{box-shadow:var(--shadow-lift)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== HOME ===== -->
+  <section id="scr-home" class="screen active">
+    <div class="topbar">
+      <div class="brand"><span class="brand-mark">🍻</span> 飲み会ネタバトル</div>
+      <span class="pill">1台でみんなで遊べる</span>
+    </div>
+    <h1>当てるほど、<br>話が<span class="hl">広がる</span>。</h1>
+    <p class="lead">値段と年代を当てるだけのシンプルなゲームです。「昔はもっと安かった」「それ中2のときだろ」——答え合わせのたびに、思い出話に花が咲きます。</p>
+
+    <div class="note-bar"><span style="font-size:18px">🫧</span><div><b>お酒は自分のペースで。</b> このゲームは点数で競うだけです。勝っても負けても飲む・飲まないは自由、水やお茶でも全然OKです。</div></div>
+
+    <div class="games" role="group" aria-label="ゲームを選ぶ">
+      <button class="game-card selected" id="card-price" onclick="selectGame('price')">
+        <div class="game-emoji">🏪</div>
+        <h2>1. 値段当てバトル</h2>
+        <p>コンビニやお店の定番の「今の値段」を当てるゲーム。物価の変化に全員で驚けます。</p>
+        <div class="game-meta"><span class="tag">全20問から出題</span><span class="tag">近いほど高得点</span></div>
+      </button>
+      <button class="game-card" id="card-year" onclick="selectGame('year')">
+        <div class="game-emoji">🕰️</div>
+        <h2>2. いつの出来事？年代当て</h2>
+        <p>ファミコン発売、スカイツリー開業…出来事が「何年か」を当てます。記憶の掘り起こしが一番盛り上がるタイプ。</p>
+        <div class="game-meta"><span class="tag">全20問から出題</span><span class="tag">世代トーク向き</span></div>
+      </button>
+    </div>
+
+    <div class="panel">
+      <h3>参加メンバー</h3>
+      <p class="sub">スマホを順番に回して、1人ずつ予想を入力します。他の人の予想は見えないので、自分の勘でどうぞ。</p>
+      <div class="count-row" id="countRow"></div>
+      <div class="name-grid" id="nameGrid"></div>
+      <div class="rounds-row">
+        <span>出題数</span>
+        <select id="roundSel">
+          <option value="3">3問（さくっと）</option>
+          <option value="5" selected>5問（おすすめ）</option>
+          <option value="8">8問（じっくり）</option>
+        </select>
+      </div>
+      <button class="cta" id="startBtn" onclick="startGame()">ゲームスタート →</button>
+    </div>
+
+    <div class="howto">
+      <h3>遊び方（説明30秒）</h3>
+      <ol>
+        <li>お題が出たら、スマホを持った人がこっそり予想を入力</li>
+        <li>全員分そろったら答え合わせ。一番近かった人が高得点</li>
+        <li>最終的に点数が一番高い人が優勝。称号がもらえます</li>
+      </ol>
+    </div>
+    <p class="foot">価格は2026年11月時点のメーカー希望小売価格・店頭価格の目安です（店舗により異なります）。<br>年代は史実に基づく年号で出題しています。</p>
+  </section>
+
+  <!-- ===== PASS (hand over phone) ===== -->
+  <section id="scr-pass" class="screen">
+    <div class="progress"><div class="progress-track"><div class="progress-fill" id="passFill"></div></div><span class="progress-txt" id="passProg"></span></div>
+    <div class="score-strip" id="passScores"></div>
+    <div class="qcard" style="margin-bottom:14px">
+      <div class="q-emoji" id="passEmoji"></div>
+      <div class="q-cat" id="passCat"></div>
+      <div class="q-name" id="passQName"></div>
+      <p class="q-desc" id="passQDesc"></p>
+    </div>
+    <div class="pass-card">
+      <div class="big">📱</div>
+      <div class="turn-banner"><div class="who" id="passWho"></div><p>スマホを渡してください。他の人は画面を見ないでね</p></div>
+      <button class="cta" onclick="showGuess()">私です、予想を入力する</button>
+      <button class="quit" onclick="quitToHome()">やめて最初に戻る</button>
+    </div>
+  </section>
+
+  <!-- ===== GUESS ===== -->
+  <section id="scr-guess" class="screen">
+    <div class="progress"><div class="progress-track"><div class="progress-fill" id="guessFill"></div></div><span class="progress-txt" id="guessProg"></span></div>
+    <div class="qcard">
+      <div class="q-emoji" id="guessEmoji"></div>
+      <div class="q-cat" id="guessCat"></div>
+      <div class="q-name" id="guessQName"></div>
+      <p class="q-desc" id="guessQDesc"></p>
+    </div>
+    <div class="turn-banner"><div class="who" id="guessWho"></div><p id="guessHint"></p></div>
+    <div class="guess-box">
+      <div class="guess-display"><span id="guessVal">0</span><small id="guessUnit"></small></div>
+      <input type="range" id="guessRange" oninput="syncGuess(this.value)">
+      <div class="range-labels"><span id="rangeMin"></span><span id="rangeMax"></span></div>
+      <div class="quick-row" id="quickRow"></div>
+      <div class="num-row"><input type="number" id="guessNum" oninput="syncGuess(this.value)"><span id="numUnit" style="font-weight:900"></span></div>
+      <button class="cta" onclick="submitGuess()">この予想で決定 ✓</button>
+    </div>
+  </section>
+
+  <!-- ===== REVEAL ===== -->
+  <section id="scr-reveal" class="screen">
+    <div class="progress"><div class="progress-track"><div class="progress-fill" id="revFill"></div></div><span class="progress-txt" id="revProg"></span></div>
+    <div class="answer-hero">
+      <div class="a-label" id="revLabel"></div>
+      <div class="a-value" id="revAnswer"></div>
+      <p class="a-trivia" id="revTrivia"></p>
+    </div>
+    <div class="rank-list" id="revRank"></div>
+    <button class="cta teal" id="revNextBtn" onclick="nextRound()">次の問題へ →</button>
+  </section>
+
+  <!-- ===== FINAL ===== -->
+  <section id="scr-final" class="screen">
+    <div class="winner">
+      <div class="crown">👑</div>
+      <p style="margin:0;color:var(--ink2);font-weight:700;font-size:13px">優勝は…</p>
+      <h2 id="finalWinner"></h2>
+      <span class="title-badge" id="finalTitle"></span>
+    </div>
+    <div class="rank-list" id="finalRank"></div>
+    <div class="btn-row">
+      <button class="cta" id="replayBtn" onclick="replaySame()">同じゲームでもう1回</button>
+      <button class="cta secondary" onclick="quitToHome()">ゲームを変える・最初に戻る</button>
+    </div>
+    <p class="foot" id="replayNote"></p>
+    <p class="foot">おつかれさまでした。優勝者へのご褒美は、みんなからの拍手でお願いします 👏</p>
+  </section>
+
+</div>
+
+<footer style="max-width:720px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:var(--ink-muted)">
+  <a href="tools.html" style="color:var(--ink)">← 道具箱にもどる</a>
+  <p style="margin:10px 0 0;font-size:12px">© 2026 会社員のAI実験室</p>
+</footer>
+<script>
+/* ============ DATA ============ */
+var PRICE_Q = [
+  {emoji:"🍜", cat:"日清食品", name:"カップヌードル（レギュラー）", desc:"1個・メーカー希望小売価格（税込）", answer:268, min:50, max:500, unit:"円",
+   trivia:"発売した1971年は100円でした。今はその約2.7倍の値段です。「昔は100円で買えた」は本当の話です。"},
+  {emoji:"🍫", cat:"やおきん", name:"うまい棒（1本）", desc:"駄菓子の定番・希望小売価格（税込）", answer:16, min:5, max:40, unit:"円",
+   trivia:"1979年の発売から長らく10円を守ってきましたが、2022年に12円、2024年には税込16円になりました。10本買っても160円です。"},
+  {emoji:"🍦", cat:"赤城乳業", name:"ガリガリ君 ソーダ（1本）", desc:"1本・希望小売価格（税込）", answer:97, min:30, max:200, unit:"円",
+   trivia:"発売当時（1981年）は50円。2024年に税込86円、2026年3月にはさらに値上がりして97円に。100円玉で買うと、おつりはたったの3円です。"},
+  {emoji:"🍨", cat:"ハーゲンダッツ", name:"ハーゲンダッツ ミニカップ バニラ", desc:"1個・希望小売価格（税込）", answer:373, min:100, max:700, unit:"円",
+   trivia:"2026年3月に351円から373円へ値上がりしました。約3年ぶりの値上げです。もう「ちょっといいアイス」とは言いにくい値段かもしれません。"},
+  {emoji:"🍙", cat:"セブン-イレブン", name:"手巻おにぎり 炭火焼熟成紅しゃけ", desc:"1個・店頭価格（税込・地域により異なります）", answer:199, min:80, max:400, unit:"円",
+   trivia:"同じセブンの「手巻おにぎり しゃけ」は138円。紅しゃけを選ぶだけで60円ほど高くなります。高いおにぎりは300円を超えるものもあります。"},
+  {emoji:"🥤", cat:"自動販売機", name:"コカ・コーラ 500ml ペットボトル", desc:"自販機での販売価格の目安", answer:200, min:80, max:350, unit:"円",
+   trivia:"2022年に160円から180円、2025年10月には200円になりました。3年で40円の値上がり。自販機の「200円」に二度見した人も多いはずです。"},
+  {emoji:"🍟", cat:"カルビー", name:"ポテトチップス うすしお味（55g）", desc:"1袋・スーパーでの店頭価格の目安（税込）", answer:170, min:60, max:350, unit:"円",
+   trivia:"2026年は2月・6月・9月と、1年に3回も値上げや内容量の見直しがありました。量が減って値段は上がる「実質値上げ」の代表例です。"},
+  {emoji:"🍫", cat:"ロッテ", name:"ガーナミルクチョコレート（板チョコ1枚）", desc:"希望小売価格（税込）", answer:227, min:50, max:350, unit:"円",
+   trivia:"板チョコは長らく「100円で買えるお菓子」の代表でした。カカオ高騰の影響で値上がりが続き、2025年7月から税込227円になりました。"},
+  {emoji:"🍔", cat:"マクドナルド", name:"ビッグマック（単品）", desc:"標準店舗の店頭価格（税込）", answer:500, min:200, max:900, unit:"円",
+   trivia:"2026年2月に480円から500円へ。ついに500円の大台に乗り、SNSでも話題になりました。"},
+  {emoji:"🍔", cat:"マクドナルド", name:"ハンバーガー（単品）", desc:"標準店舗の店頭価格（税込）", answer:190, min:50, max:400, unit:"円",
+   trivia:"2002年には59円で売られていた時期も。2025年3月に170円から190円になり、2026年2月の値上げでは据え置かれました。"},
+  {emoji:"🍚", cat:"吉野家", name:"牛丼 並盛（店内）", desc:"1杯・店内飲食の価格（税込）", answer:498, min:250, max:800, unit:"円",
+   trivia:"ライバルのすき家は450円で、大手3社ではすき家が一番安い状況です。吉野家はワンコインまであと2円。"},
+  {emoji:"🍝", cat:"サイゼリヤ", name:"ミラノ風ドリア", desc:"1皿・一般店の価格（税込）", answer:320, min:150, max:700, unit:"円",
+   trivia:"1999年に480円から290円へ大幅値下げした伝説の一皿。2026年10月29日、約6年ぶりの値上げで300円から320円になりました。"},
+  {emoji:"🍩", cat:"ミスタードーナツ", name:"ポン・デ・リング（1個）", desc:"テイクアウトの価格（税込）", answer:183, min:80, max:350, unit:"円",
+   trivia:"2016年は108円。2026年9月30日の値上げで183円になりました。ちなみに1971年の1号店では、ドーナツは1個40円でした。"},
+  {emoji:"📖", cat:"集英社", name:"週刊少年ジャンプ（通常号）", desc:"1冊・定価（税込）", answer:320, min:100, max:600, unit:"円",
+   trivia:"1968年の創刊時は90円でした。合併号などの特別な号は、通常号より少し高くなります。"},
+  {emoji:"📮", cat:"日本郵便", name:"はがき（通常はがき）1枚", desc:"国内に送る料金", answer:85, min:30, max:200, unit:"円",
+   trivia:"2024年10月に63円から85円へ。約30年ぶりの大幅値上げでした。年賀状も同じ85円です。"},
+  {emoji:"🚃", cat:"JR東日本", name:"電車の初乗り運賃（きっぷ）", desc:"大人・きっぷで買った場合", answer:160, min:80, max:300, unit:"円",
+   trivia:"2026年3月に150円から160円へ。消費税分などを除けば、会社ができてから初めての運賃値上げです。ICカードなら155円。"},
+  {emoji:"🎬", cat:"TOHOシネマズ新宿", name:"映画の一般料金（大人1人）", desc:"通常の鑑賞料金（税込）", answer:2200, min:1000, max:3500, unit:"円",
+   trivia:"2019年までは全国1,800円が当たり前でした。2026年7月から劇場ごとの料金になり、新宿などの都心は2,200円に。"},
+  {emoji:"☕", cat:"ドトールコーヒーショップ", name:"ブレンドコーヒー（S）", desc:"店内・1杯（税込）", answer:300, min:120, max:600, unit:"円",
+   trivia:"2024年12月に250円から280円、2026年7月に300円になりました。「ワンコインでおつりがたっぷり」の時代は終わりつつあります。"},
+  {emoji:"✉️", cat:"日本郵便", name:"手紙（定形郵便・50gまで）", desc:"国内に送る料金", answer:110, min:40, max:250, unit:"円",
+   trivia:"2024年10月に84円から110円へ。それまで25gまでと50gまでで料金が分かれていましたが、このとき一つにまとめられました。"},
+  {emoji:"🍨", cat:"ハーゲンダッツ", name:"ハーゲンダッツ パイント（473ml）", desc:"家族で分ける大きいカップ・希望小売価格（税込）", answer:1026, min:400, max:2000, unit:"円",
+   trivia:"2026年3月に967円から1,026円へ。ついに1,000円を超えました。ミニカップに直すと約4個ぶんの量です。"}
+];
+var YEAR_Q = [
+  {emoji:"🎮", cat:"任天堂", name:"ファミリーコンピュータ（ファミコン）発売", desc:"赤と白のコントローラーが懐かしい、あの家庭用ゲーム機", answer:1983, min:1970, max:2000, unit:"年",
+   trivia:"価格は14,800円。発売から2年後の1985年に「スーパーマリオブラザーズ」が登場し、社会現象になりました。"},
+  {emoji:"⚾", cat:"東京・水道橋", name:"東京ドーム開場", desc:"日本初の全天候型多目的スタジアム「ビッグエッグ」", answer:1988, min:1970, max:2010, unit:"年",
+   trivia:"こけら落としはアイドルのコンサートではなく、プロ野球のオープン戦でした。完成当時、東京の新しいランドマークとして大話題に。"},
+  {emoji:"🐉", cat:"集英社・テレビ朝日", name:"アニメ『ドラゴンボール』放送開始", desc:"悟空がブルマと出会う、物語の始まりの年", answer:1986, min:1975, max:2005, unit:"年",
+   trivia:"原作マンガの連載開始は1984年。アニメはその2年後に始まり、『Z』まで含めると約10年も放送されました。"},
+  {emoji:"💻", cat:"マイクロソフト", name:"Windows 95 発売", desc:"深夜の発売に行列ができ、ニュースになったOS", answer:1995, min:1985, max:2010, unit:"年",
+   trivia:"「スタートボタン」とタスクバーはこのとき初登場。インターネットが一般家庭に広がるきっかけになりました。"},
+  {emoji:"🔴", cat:"任天堂", name:"『ポケットモンスター 赤・緑』発売", desc:"ゲームボーイ用ソフト。通信ケーブルで交換した思い出", answer:1996, min:1985, max:2010, unit:"年",
+   trivia:"最初はそこまで注目されていませんでしたが、口コミで広がり大ヒット。アニメ放送開始は翌1997年です。"},
+  {emoji:"📱", cat:"NTTドコモ", name:"iモード サービス開始", desc:"携帯電話でメールとネットが見られるようになった転機", answer:1999, min:1990, max:2010, unit:"年",
+   trivia:"着メロや待ち受け画像のダウンロードが大流行。スマホ時代の「アプリで何でも買う」文化のご先祖さまです。"},
+  {emoji:"📺", cat:"テレビの歴史", name:"地上デジタル放送（地デジ）への完全移行", desc:"アナログ放送が終了し、画面右上の「アナログ」表示が消えた年", answer:2011, min:2000, max:2020, unit:"年",
+   trivia:"移行直前は対応テレビやチューナーが品薄に。「地デジカ」というゆるキャラもこの頃のものです。東北3県のみ翌2012年まで延期されました。"},
+  {emoji:"🗼", cat:"東京・墨田区", name:"東京スカイツリー開業", desc:"高さ634m、世界一高い電波塔として開業", answer:2012, min:2000, max:2025, unit:"年",
+   trivia:"634mは「武蔵（むさし）」の語呂合わせ。着工は2008年で、建設中から観光名所になっていました。"},
+  {emoji:"🚄", cat:"国鉄", name:"東海道新幹線 開業", desc:"東京〜新大阪を結ぶ、世界初の高速鉄道", answer:1964, min:1950, max:1985, unit:"年",
+   trivia:"開業は東京オリンピック開会式のわずか9日前。開業当初、東京〜新大阪は4時間かかりました。"},
+  {emoji:"🎧", cat:"ソニー", name:"初代ウォークマン 発売", desc:"音楽を外に持ち出せるようにした、カセットのプレーヤー", answer:1979, min:1965, max:1995, unit:"年",
+   trivia:"価格は33,000円。「録音できないテープレコーダーなんて売れない」と社内で反対されたというエピソードが有名です。"},
+  {emoji:"🏰", cat:"千葉・浦安", name:"東京ディズニーランド 開園", desc:"日本初のディズニーパーク", answer:1983, min:1970, max:2000, unit:"年",
+   trivia:"実はファミコン発売と同じ年。1983年は、日本の遊びが大きく変わった年といえそうです。"},
+  {emoji:"🧾", cat:"日本の税金", name:"消費税（3%）スタート", desc:"買い物に税金がかかるようになった年", answer:1989, min:1975, max:2005, unit:"年",
+   trivia:"平成元年の4月1日にスタート。その後5%（1997年）、8%（2014年）、10%（2019年）と上がってきました。"},
+  {emoji:"⚽", cat:"サッカー", name:"Jリーグ 開幕", desc:"日本初のプロサッカーリーグがスタート", answer:1993, min:1980, max:2005, unit:"年",
+   trivia:"開幕戦は国立競技場でのヴェルディ川崎対横浜マリノス。チーム名に企業名ではなく地域名を使ったのも新しい試みでした。"},
+  {emoji:"🎮", cat:"ソニー", name:"初代プレイステーション 発売", desc:"CD-ROMのソフトで遊ぶ家庭用ゲーム機", answer:1994, min:1985, max:2005, unit:"年",
+   trivia:"価格は39,800円。セガサターンの発売はその直前の11月で、年末は家庭用ゲーム機の戦いが一気に熱くなりました。"},
+  {emoji:"🥚", cat:"バンダイ", name:"たまごっち 発売", desc:"小さな画面で育てる、卵型の携帯ゲーム", answer:1996, min:1985, max:2005, unit:"年",
+   trivia:"価格は1,980円。品薄でお店に行列ができ、なかなか手に入らない社会現象になりました。"},
+  {emoji:"🏆", cat:"サッカー", name:"日韓ワールドカップ 開催", desc:"日本と韓国の共同開催でもりあがったW杯", answer:2002, min:1990, max:2015, unit:"年",
+   trivia:"日本代表はこの大会で初めて決勝トーナメントに進み、ベスト16に入りました。"},
+  {emoji:"📱", cat:"アップル", name:"iPhone 日本で発売", desc:"日本で最初に発売されたのは「iPhone 3G」", answer:2008, min:1998, max:2018, unit:"年",
+   trivia:"7月11日にソフトバンクから発売され、発売日にはお店に行列ができました。"},
+  {emoji:"💬", cat:"アプリ", name:"LINE サービス開始", desc:"今では連絡の定番になったメッセージアプリ", answer:2011, min:2000, max:2020, unit:"年",
+   trivia:"東日本大震災をきっかけに「大切な人と連絡を取れるように」と開発されたといわれています。"},
+  {emoji:"🏪", cat:"セブン-イレブン", name:"セブン-イレブン 日本1号店オープン", desc:"東京・豊洲にできた、日本のコンビニの草分け", answer:1974, min:1960, max:1990, unit:"年",
+   trivia:"1号店は東京・江東区の豊洲。最初に売れた商品はサングラスだったという話が知られています。"},
+  {emoji:"⛷️", cat:"長野", name:"長野オリンピック（冬季）開催", desc:"スキージャンプ団体の金メダルが名場面", answer:1998, min:1985, max:2010, unit:"年",
+   trivia:"日本は冬季大会で過去最多（当時）の10個のメダルを獲得。ジャンプ団体の逆転金メダルは今も語り草です。"}
+];
+
+/* ============ STATE ============ */
+var gameType = 'price';
+var playerCount = 5;
+var players = [];       // {name, score}
+var questions = [];
+var roundIdx = 0;
+var turnIdx = 0;
+var guesses = [];       // {player, value, diff, points}
+var totalRounds = 5;
+var roundsWanted = 5;
+var usedQ = [];        // このセッションで出題済みのお題
+
+function $(id){ return document.getElementById(id); }
+function show(id){
+  var screens = ['scr-home','scr-pass','scr-guess','scr-reveal','scr-final'];
+  screens.forEach(function(s){ $(s).classList.toggle('active', s===id); });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function shuffle(a){ var x=a.slice(); for(var i=x.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=x[i]; x[i]=x[j]; x[j]=t; } return x; }
+
+/* ============ HOME / SETUP ============ */
+function selectGame(t){
+  gameType = t;
+  $('card-price').classList.toggle('selected', t==='price');
+  $('card-year').classList.toggle('selected', t==='year');
+}
+function buildSetup(){
+  var cr = $('countRow'); cr.innerHTML='';
+  [2,3,4,5,6].forEach(function(n){
+    var b=document.createElement('button');
+    b.className='count-btn'+(n===playerCount?' on':'');
+    b.textContent=n+'人';
+    b.onclick=function(){ playerCount=n; buildSetup(); };
+    cr.appendChild(b);
+  });
+  var ng=$('nameGrid'); ng.innerHTML='';
+  var defaults=['Aさん','Bさん','Cさん','Dさん','Eさん','Fさん'];
+  for(var i=0;i<playerCount;i++){
+    var wrap=document.createElement('div');
+    var lab=document.createElement('label');
+    lab.textContent=(i+1)+'人目';
+    var inp=document.createElement('input');
+    inp.type='text'; inp.id='pname-'+i; inp.maxLength=10;
+    inp.value = (window._savedNames && window._savedNames[i]) ? window._savedNames[i] : defaults[i];
+    lab.appendChild(inp); wrap.appendChild(lab); ng.appendChild(wrap);
+  }
+}
+buildSetup();
+
+/* ============ GAME FLOW ============ */
+function startGame(){
+  players=[];
+  window._savedNames=[];
+  for(var i=0;i<playerCount;i++){
+    var v=($('pname-'+i).value||'').trim() || ((i+1)+'人目');
+    window._savedNames.push(v);
+    players.push({name:v, score:0});
+  }
+  roundsWanted = parseInt($('roundSel').value,10);
+  usedQ = [];   // ホームから始め直すと、出題済みの記録をリセット
+  drawQuestions();
+  roundIdx=0;
+  beginRound();
+}
+/* 出題済みを除いた残りから出題する */
+function remainingPool(){
+  var pool = gameType==='price' ? PRICE_Q : YEAR_Q;
+  return pool.filter(function(q){ return usedQ.indexOf(q)<0; });
+}
+function drawQuestions(){
+  var rest = remainingPool();
+  questions = shuffle(rest).slice(0, Math.min(roundsWanted, rest.length));
+  questions.forEach(function(q){ usedQ.push(q); });
+  totalRounds = questions.length;
+}
+function replaySame(){
+  if(remainingPool().length===0) return;
+  players.forEach(function(p){ p.score=0; });
+  drawQuestions();
+  roundIdx=0;
+  beginRound();
+}
+function quitToHome(){ buildSetup(); show('scr-home'); }
+
+function progressPct(){
+  // overall: rounds completed + fraction of current round turns
+  var per = 1/totalRounds;
+  return Math.round((roundIdx/totalRounds + (turnIdx/players.length)*per)*100);
+}
+function scoreStripHTML(){
+  var sorted = players.map(function(p,i){return {p:p,i:i};}).sort(function(a,b){return b.p.score-a.p.score;});
+  var top = sorted.length? sorted[0].p.score : 0;
+  return players.map(function(p){
+    var cls = (p.score===top && top>0) ? 'score-chip lead-chip' : 'score-chip';
+    var crown = (p.score===top && top>0) ? '👑 ' : '';
+    return '<span class="'+cls+'">'+crown+escapeHtml(p.name)+' '+p.score+'点</span>';
+  }).join('');
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function beginRound(){
+  turnIdx=0; guesses=[];
+  showPass();
+}
+function showPass(){
+  var q=questions[roundIdx];
+  $('passFill').style.width = progressPct()+'%';
+  $('passProg').textContent = '第'+(roundIdx+1)+'問 / '+totalRounds+'問';
+  $('passScores').innerHTML = scoreStripHTML();
+  $('passEmoji').textContent=q.emoji;
+  $('passCat').textContent=q.cat;
+  $('passQName').textContent = gameType==='price' ? q.name+' の値段は？' : q.name+' は何年？';
+  $('passQDesc').textContent=q.desc;
+  $('passWho').textContent='次は '+players[turnIdx].name+' の番です';
+  show('scr-pass');
+}
+var currentGuess = 0;
+function showGuess(){
+  var q=questions[roundIdx];
+  $('guessFill').style.width = progressPct()+'%';
+  $('guessProg').textContent = '第'+(roundIdx+1)+'問 / '+totalRounds+'問';
+  $('guessEmoji').textContent=q.emoji;
+  $('guessCat').textContent=q.cat;
+  $('guessQName').textContent = gameType==='price' ? q.name+' の値段は？' : q.name+' は何年？';
+  $('guessQDesc').textContent=q.desc;
+  $('guessWho').textContent=players[turnIdx].name+' の予想';
+  $('guessHint').textContent = gameType==='price' ? '今の値段だと思う金額を入れてください' : '出来事があったと思う西暦を入れてください';
+  var r=$('guessRange');
+  r.min=q.min; r.max=q.max; r.step = gameType==='price' ? 1 : 1;
+  $('rangeMin').textContent = q.min+q.unit;
+  $('rangeMax').textContent = q.max+q.unit;
+  $('guessUnit').textContent = ' '+q.unit;
+  $('numUnit').textContent = q.unit;
+  var start = Math.round((q.min+q.max)/2);
+  currentGuess = start;
+  r.value=start; $('guessNum').value=start; $('guessVal').textContent=start;
+  // quick chips
+  var qr=$('quickRow'); qr.innerHTML='';
+  var steps = gameType==='price' ? [-50,-10,10,50] : [-10,-5,-1,1,5,10];
+  steps.forEach(function(d){
+    var b=document.createElement('button');
+    b.textContent=(d>0?'+':'')+d;
+    b.onclick=function(){ syncGuess(currentGuess+d); };
+    qr.appendChild(b);
+  });
+  show('scr-guess');
+}
+function syncGuess(v){
+  var q=questions[roundIdx];
+  v=parseInt(v,10);
+  if(isNaN(v)) return;
+  v=Math.max(q.min, Math.min(q.max, v));
+  currentGuess=v;
+  $('guessRange').value=v;
+  $('guessNum').value=v;
+  $('guessVal').textContent=v;
+}
+function scoreFor(q, val){
+  var diff = Math.abs(val - q.answer);
+  if(gameType==='price'){
+    var ratio = diff / q.answer;
+    if(diff===0) return {diff:diff, points:120, exact:true};
+    var pts = Math.max(5, Math.round(100 * Math.pow(1-ratio, 1.4)));
+    if(ratio>=1) pts = 5;
+    return {diff:diff, points:pts, exact:false};
+  } else {
+    if(diff===0) return {diff:diff, points:120, exact:true};
+    var pts2 = Math.max(5, 100 - diff*7);
+    return {diff:diff, points:pts2, exact:false};
+  }
+}
+function submitGuess(){
+  var q=questions[roundIdx];
+  var s=scoreFor(q, currentGuess);
+  guesses.push({player:turnIdx, value:currentGuess, diff:s.diff, points:s.points, exact:s.exact});
+  players[turnIdx].score += s.points;
+  turnIdx++;
+  if(turnIdx < players.length){ showPass(); } else { showReveal(); }
+}
+function showReveal(){
+  var q=questions[roundIdx];
+  $('revFill').style.width = Math.round(((roundIdx+1)/totalRounds)*100)+'%';
+  $('revProg').textContent = '第'+(roundIdx+1)+'問 / '+totalRounds+'問 ・ 答え合わせ';
+  $('revLabel').textContent = (gameType==='price' ? '正解の値段' : '正解の年');
+  $('revAnswer').textContent = q.answer.toLocaleString()+q.unit + (gameType==='year' ? '' : '');
+  if(gameType==='year') $('revAnswer').textContent = q.answer+'年';
+  $('revTrivia').textContent = q.trivia;
+  var sorted = guesses.slice().sort(function(a,b){ return a.diff-b.diff || b.points-a.points; });
+  var medals=['🥇','🥈','🥉'];
+  $('revRank').innerHTML = sorted.map(function(g,i){
+    var p=players[g.player];
+    var diffTxt = g.exact ? 'ピタリ！' : (gameType==='price' ? '差 '+g.diff.toLocaleString()+'円' : '差 '+g.diff+'年');
+    return '<div class="rank-row'+(i===0?' first':'')+'">'
+      +'<div class="rank-num">'+(medals[i]||(i+1))+'</div>'
+      +'<div class="rank-main"><div class="nm">'+escapeHtml(p.name)+(g.exact?'<span class="exact-badge">ピタリ賞 +20点</span>':'')+'</div>'
+      +'<div class="dt">予想 '+g.value.toLocaleString()+q.unit+' ・ '+diffTxt+'</div></div>'
+      +'<div class="rank-pts"><div class="pt">+'+g.points+'<small>点</small></div><div class="diff">合計 '+p.score+'点</div></div></div>';
+  }).join('');
+  $('revNextBtn').textContent = (roundIdx+1>=totalRounds) ? '最終結果を見る 🏆' : '次の問題へ →';
+  show('scr-reveal');
+}
+function nextRound(){
+  roundIdx++;
+  if(roundIdx>=totalRounds){ showFinal(); } else { beginRound(); }
+}
+function showFinal(){
+  var sorted = players.map(function(p,i){return {p:p,i:i};}).sort(function(a,b){return b.p.score-a.p.score;});
+  var w = sorted[0].p;
+  $('finalWinner').textContent = w.name+'（'+w.score+'点）';
+  $('finalTitle').textContent = gameType==='price' ? '🏅 称号：今日の物価博士' : '🏅 称号：今日の生き字引';
+  var medals=['🥇','🥈','🥉'];
+  $('finalRank').innerHTML = sorted.map(function(e,i){
+    return '<div class="rank-row'+(i===0?' first':'')+'">'
+      +'<div class="rank-num">'+(medals[i]||(i+1))+'</div>'
+      +'<div class="rank-main"><div class="nm">'+escapeHtml(e.p.name)+'</div>'
+      +'<div class="dt">'+(i===0 ? '一番の勘の良さでした' : 'あと '+(sorted[0].p.score-e.p.score)+'点差')+'</div></div>'
+      +'<div class="rank-pts"><div class="pt">'+e.p.score+'<small>点</small></div></div></div>';
+  }).join('');
+  var rest = remainingPool().length;
+  var rb = $('replayBtn');
+  if(rest===0){
+    rb.disabled = true;
+    rb.textContent = 'お題を出し切りました';
+    $('replayNote').textContent = 'このゲームのお題は全部出ました。もう一度遊ぶときは「最初に戻る」からどうぞ（お題の記録がリセットされます）。';
+  } else {
+    rb.disabled = false;
+    rb.textContent = '同じゲームでもう1回（残り'+Math.min(rest, roundsWanted)+'問）';
+    $('replayNote').textContent = rest < roundsWanted ? '残りのお題が少ないので、次は'+rest+'問で遊びます。' : '';
+  }
+  show('scr-final');
+}
+</script>
+</body>
+</html>
