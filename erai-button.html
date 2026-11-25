@@ -239,7 +239,7 @@ h1 {
 (function () {
   // 連打の段階（疲れ具合）ごとのほめ言葉。LIMIT回目でほめ係が燃えつきる
   var TIERS = [
-    { upTo: 3, mood: "ていねい", msgs: [
+    { upTo: 2, mood: "ていねい", msgs: [
       "えらい！今日もちゃんと起きて、ここまで来ました。立派です。",
       "えらいです。あなたの頑張りは、ちゃんと見ています。",
       "本当にえらい。息をして、ボタンまで押せました。満点です。",
@@ -261,29 +261,27 @@ h1 {
       "えらい。机に向かった。それはもう、ほぼ仕事です。",
       "えらいです。「いったん持ち帰ります」も、立派な判断です。"
     ]},
-    { upTo: 7, mood: "ふつう", msgs: [
+    { upTo: 5, mood: "ふつう", msgs: [
       "えらい！", "えらいね。", "うん、えらい。", "えらいえらい。", "よくできました。",
       "いいね、えらい。", "さすが。", "やるじゃん。", "えらいと思う。", "今日もえらい。",
       "お見事。", "ナイス。", "たいしたもんだ。", "花丸です。",
       "グッジョブ。", "いい感じ。", "優勝。", "天才か。", "100点。", "パチパチ。", "その調子。"
     ]},
-    { upTo: 12, mood: "雑", msgs: [
+    { upTo: 7, mood: "雑", msgs: [
       "はいはい、えらい。", "えら。", "えらいってば。", "さっきも言ったよ。", "えらい（棒読み）",
       "うんうん、えらいえらい。", "えらいんじゃない？", "まあ、えらい。", "えらいで合ってる？",
       "同上。", "以下同文。", "えらい、たぶん。", "わかったわかった。", "えらい（3回目くらい）",
       "知ってる。", "えらい（コピペ）", "ハイ、エライ。", "えらいの在庫、残りわずか。",
       "（スマホを見ながら）えらい。", "えらい。で、次は？"
     ]},
-    { upTo: 19, mood: "かなり雑", msgs: [
+    { upTo: 9, mood: "かなり雑", msgs: [
       "え。", "うん。", "えらえら。", "ｴﾗｲ", "はい。", "すごいすごい。",
       "ら。", "い。", "えｒ", "ほい。", "あー、うん。", "それな。", "おつ。", "へえ。",
       "（うなずく）", "えらい的なやつ。", "……。", "（既読）", "（目をそらす）",
       "えらいは品切れです。", "ｸﾞｯ"
     ]}
   ];
-  var LIMIT = 20;          // この回数目で燃えつきる（以前は31）
-  var GRACE_MS = 2000;     // 手を止めてから回復が始まるまで
-  var STEP_MS = 1500;      // 1段ぶん回復するのにかかる時間（全快まで最大30秒ほど）
+  var LIMIT = 10;          // この回数目で燃えつきる（以前は20→31）。自然回復はなし
 
   // 時間帯・曜日つきのほめ言葉（ていねいな段階でときどき出る）
   function timeMsgs() {
@@ -395,7 +393,7 @@ h1 {
   var fillEl = document.getElementById("fill");
   var btn = document.getElementById("press");
 
-  var fatigue = 0, lastPress = 0, lastMsg = "", tick = null;
+  var fatigue = 0, lastMsg = "";
   var reverse = 0, thanks = THANKS_PATTERNS[0], lastPattern = -1;
 
   function todayKey() {
@@ -415,12 +413,6 @@ h1 {
     for (var i = 0; i < TIERS.length; i++) if (n <= TIERS[i].upTo) return i;
     return TIERS.length - 1;
   }
-  // 手を止めていた時間に応じて、疲れが1段ずつ抜けていく
-  function currentFatigue(now) {
-    var idle = now - lastPress - GRACE_MS;
-    var healed = idle > 0 ? Math.floor(idle / STEP_MS) : 0;
-    return Math.max(0, fatigue - healed);
-  }
   function motivation(n) {
     if (n <= 0) return 100;
     return Math.max(0, Math.round(100 - (n - 1) * 100 / (LIMIT - 1)));
@@ -437,19 +429,8 @@ h1 {
     moodEl.textContent = mood + " " + pct + "%";
     fillEl.style.width = pct + "%";
   }
-  // 休んでいる間、メーターがじわじわ戻る様子を見せる
-  function startTick() {
-    clearInterval(tick);
-    tick = setInterval(function () {
-      if (reverse > 0) { clearInterval(tick); return; }
-      var f = currentFatigue(Date.now());
-      showMeter(f);
-      if (f <= 0) clearInterval(tick);
-    }, 500);
-  }
 
   function startReverse() {
-    clearInterval(tick);
     var i;
     do { i = Math.floor(Math.random() * THANKS_PATTERNS.length); } while (i === lastPattern);
     lastPattern = i;
@@ -475,7 +456,6 @@ h1 {
     if (i === thanks.length - 1) {
       reverse = 0;
       fatigue = 0;
-      lastPress = 0;
       btn.textContent = "ほめて";
       btn.setAttribute("aria-label", "ほめてもらう");
     }
@@ -483,15 +463,7 @@ h1 {
 
   function press() {
     if (reverse > 0) { pressReverse(); return; }
-    var now = Date.now();
-    var before = fatigue;
-    var f = currentFatigue(now);
-    var note = "";
-    if (before >= 6 && f === 0) note = "（ほめ係が復活しました）";
-    else if (before >= 6 && before - f >= 4) note = "（ほめ係、ちょっと回復）";
-
-    fatigue = f + 1;
-    lastPress = now;
+    fatigue++;
     count++;
     countEl.textContent = count;
     saveCount(count);
@@ -505,10 +477,9 @@ h1 {
       if (tm.length && Math.random() < 0.35) list = tm;
     }
     msgEl.className = "t" + t;
-    msgEl.textContent = note + pick(list);
+    msgEl.textContent = pick(list);
     showMeter(fatigue);
     say("t" + t);
-    startTick();
   }
 
   btn.addEventListener("click", press);
