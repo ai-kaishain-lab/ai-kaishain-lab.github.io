@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<!-- © 2026 会社員のAI実験室 https://ai-kaishain-lab.github.io/ -->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>百合の間に挟まるな！｜会社員のAI実験室</title>
+<meta name="description" content="ふたりの間に割り込もうとするおじゃま虫を、タップでぶっ飛ばす30秒ゲーム。会社員のAI実験室がAIと作りました。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="百合の間に挟まるな！｜会社員のAI実験室">
+<meta property="og:description" content="おじゃま虫を、ぶっ飛ばせ。ふたりの間を守る30秒タップゲーム。結末はあなたの守り方しだい。">
+<meta property="og:url" content="https://ai-kaishain-lab.github.io/hasamaruna/">
+<meta property="og:image" content="https://ai-kaishain-lab.github.io/og-hasamaruna.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 夕暮れの公園みたいにやさしく、叩く瞬間だけ派手に
+   IDEA: 縁日の射的・もぐら叩きの屋台。ベンチのふたりを守る係になる
+   PICTURE: Museのイラスト（夕焼けの桜とベンチのふたり）に、左右と空から寄ってくるおじゃま虫
+   COLOUR and TYPE: 夕焼けピンク×ラベンダー、差し色はレモン。M PLUS Rounded 1c
+   LAYOUT: 小さなタイトル→HUD→ゲーム画面→遊び方。スマホでは縦に積む */
+:root{color-scheme:light dark;--bg:light-dark(#fff3f1,#1c1220);--ink:light-dark(#2b1930,#fbeef3);--sub:light-dark(#7a5a78,#c9adc6);--accent:#ffd84d;--rose:#ff6f91;--card:light-dark(#ffffff,#2a1b30)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "M PLUS Rounded 1c",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1000px;margin:0 auto;padding:16px max(3vw,12px) 40px}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.1;margin:4px 0 12px;font-weight:800;text-wrap:balance}
+.nw{white-space:nowrap}.sub{display:block;margin-top:4px;font-size:.5em;font-weight:500;color:var(--sub)}
+.sub2{font-weight:800;color:var(--accent);margin:-4px 0 12px}
+.hud{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-bottom:10px;font-weight:800}
+.hud .n{font-size:22px;font-variant-numeric:tabular-nums}
+.hud small{color:var(--sub);font-weight:500;margin-right:4px}
+.mini{font-size:15px;min-height:44px;padding:0 16px;background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 2px light-dark(#f1c9d6,#4a3450)}.mini:active{transform:none;box-shadow:inset 0 0 0 2px #ff6f91}
+.gauge{flex:1 1 160px;display:flex;align-items:center;gap:8px}
+.bar{flex:1;height:14px;border-radius:9px;background:light-dark(#f1dbe3,#3a2840);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff8fb0,#ff5c8a);transition:width .2s}
+.stage{position:relative;aspect-ratio:16/10;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(80,20,60,.25);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+@media(max-width:600px){.stage{aspect-ratio:4/5}}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+.ov{position:absolute;inset:0;display:grid;place-items:center;padding:16px;background:rgba(40,15,45,.55);color:#fff;text-align:center}
+.ov[hidden]{display:none}
+.ov.art{align-items:end;background:linear-gradient(180deg,rgba(40,15,45,0) 35%,rgba(40,15,45,.82) 78%),url(title.webp) center 24%/cover}
+.ov.end{align-items:end;background-color:#1f1226;background-size:cover;background-position:center 30%;background-repeat:no-repeat}
+.ov.end .box{text-shadow:0 2px 8px rgba(40,10,40,.8)}
+@media(min-width:601px){.ov.end{padding:16px 24px}.ov.end .box{max-width:none;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"h big" "s rk" "s bs" "s btn";column-gap:28px;text-align:left;align-items:end}
+.ov.end h2{grid-area:h;margin:0}.ov.end .story{grid-area:s;align-self:start;margin:6px 0 0;max-width:34em}.ov.end .big{grid-area:big;text-align:center}.ov.end .rank{grid-area:rk;text-align:center;margin:2px 0}.ov.end #bs{grid-area:bs;text-align:center;margin:0 0 8px}.ov.end button{grid-area:btn;justify-self:center}}
+.story{font-size:15px;line-height:1.6}
+@media(max-width:600px){.ov.end{background-size:100% auto;background-position:center top;padding:10px}.ov.end h2{font-size:24px;margin-bottom:4px}.ov.end .big{font-size:40px}.ov.end p{margin-bottom:8px}.story{font-size:13px}}
+.ov.art .box{text-shadow:0 2px 8px rgba(40,10,40,.7)}
+.box{max-width:420px}
+.ov h2{font-size:clamp(26px,5vw,40px);line-height:1.1;margin:0 0 10px;font-weight:800}
+.ov p{margin:0 0 16px}
+.big{font-size:clamp(40px,9vw,64px);font-weight:800;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums}
+.rank{font-size:20px;font-weight:800;margin:8px 0 4px}
+button{font:inherit;font-weight:800;font-size:18px;min-height:48px;padding:0 28px;border:0;border-radius:999px;background:var(--accent);color:#3a2100;cursor:pointer;box-shadow:0 4px 0 #c99a00}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #c99a00}
+button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.how{margin-top:16px;color:var(--sub);font-size:15px}
+.how b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="nw">百合の間に</span><span class="nw">挟まるな！</span><span class="sub">〜おじゃま虫をぶっ飛ばせ〜</span></h1>
+  <div class="hud">
+    <span><small>スコア</small><span class="n" id="sc">0</span></span>
+    <span><small>コンボ</small><span class="n" id="cb">0</span></span>
+    <span><small>残り</small><span class="n" id="tm">30</span><small>秒</small></span>
+    <button class="mini" id="snd" aria-pressed="true">音：オン</button>
+    <span class="gauge"><small>尊さ</small><span class="bar"><i id="gg"></i></span></span>
+  </div>
+  <div class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <div class="ov art" id="start"><div class="box">
+      <h2>百合の間に<br>挟まるな！</h2><div class="sub2">〜おじゃま虫をぶっ飛ばせ〜</div>
+      <div id="gate"><p>音楽が流れます</p><button id="open">タップしてはじめる</button></div>
+      <div id="rules" hidden><p>ふたりの間に割り込もうとする〈おじゃま虫〉を、タップでぶっ飛ばそう。間に入られると尊さゲージが減ります。30秒守りきれ。</p>
+      <button id="go">スタート</button></div>
+    </div></div>
+    <div class="ov end" id="over" hidden><div class="box">
+      <h2 id="ovh">終了</h2>
+      <p class="story" id="story"></p>
+      <div class="big" id="fs">0</div>
+      <div class="rank" id="rk"></div>
+      <p id="bs"></p>
+      <button id="again">もう一回</button>
+    </div></div>
+  </div>
+  <p class="how"><b>遊び方</b>　左右から歩いてくる虫は1回、ヘルメットの大きい虫は2回、空から急降下してくる虫は小さいので狙って叩く。連続で当てるとコンボで得点が増え、空振りするとコンボが切れます。</p>
+  <p class="how"><a href="../tools.html" style="color:var(--ink)">← 道具箱にもどる</a></p>
+</div>
+<script>
+{
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),stage=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+const H=600,GY=480,LIMIT=30;
+const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W=960,sc=1;
+function fit(){const r=cv.getBoundingClientRect();if(!r.width)return;const d=Math.min(devicePixelRatio||1,2);cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);W=H*r.width/r.height;sc=cv.height/H}
+const ro=new ResizeObserver(fit);ro.observe(cv);fit();
+
+let breaches=0,st='title',score=0,best=0,combo=0,gauge=100,time=LIMIT,elapsed=0,foes=[],parts=[],texts=[],hearts=[],shake=0,spawnT=0,hitstop=0,react=0,last=0;
+try{best=+localStorage.getItem('totoiGuardBest')||0}catch(e){}
+const petals=Array.from({length:22},()=>({x:Math.random()*1400,y:Math.random()*H,v:20+Math.random()*30,p:Math.random()*6}));
+
+let ac=null;
+let muted=false;try{muted=localStorage.getItem('totoiGuardMute')==='1'}catch(e){}
+const midi=n=>440*2**((n-69)/12);
+let master=null,nbuf=null;
+function out(){if(!master){master=ac.createGain();master.gain.value=muted?0:1;master.connect(ac.destination)}return master}
+function tone(f,t,d,type,vol,dest,f2){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(dest||out());o.start(t);o.stop(t+d+.03)}
+function noise(t,d,vol,type,freq,dest){if(!nbuf){nbuf=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const a=nbuf.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}
+  const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=nbuf;f.type=type;f.frequency.value=freq;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(dest||out());s.start(t,Math.random()*.5);s.stop(t+d+.03)}
+function sfx(f1,f2,dur,type){if(!ac)return;try{tone(f1,ac.currentTime,dur,type||'square',.12,null,f2)}catch(e){}}
+/* ぶっ飛ばし音：ドン（低音）＋バキッ（ノイズ）＋ヒューン（上昇音）＋コンボで上がっていく和音 */
+function boom(c){if(!ac)return;try{const t=ac.currentTime;
+  tone(190,t,.32,'sine',.6,null,38);
+  tone(95,t,.22,'square',.18,null,45);
+  noise(t,.22,.5,'lowpass',1400);
+  noise(t,.07,.35,'highpass',3500);
+  tone(480,t+.06,.55,'triangle',.14,null,2400);
+  const b=72+Math.min(c,12);[0,4,7,12].forEach((k,i)=>tone(midi(b+k),t+.05+i*.045,.22,'square',.055));
+}catch(e){}}
+function kiran(){if(!ac)return;try{const t=ac.currentTime;tone(midi(96),t,.18,'sine',.12);tone(midi(103),t+.08,.35,'sine',.1)}catch(e){}}
+/* BGM：Museが作った曲を再生。ループ曲は継ぎ目が出にくいOGGを優先し、再生できない端末はMP3 */
+const TRACKS={title:'bgm-title',play:'bgm-play',high:'bgm-end-high',mid:'bgm-end-mid',low:'bgm-end-low'};
+const canOgg=(()=>{try{return !!document.createElement('audio').canPlayType('audio/ogg; codecs="vorbis"')}catch(e){return false}})();
+const bufs={};
+function load(k){if(!bufs[k])bufs[k]=(async()=>{for(const ext of canOgg?['ogg','mp3']:['mp3']){try{const r=await fetch(TRACKS[k]+'.'+ext);if(!r.ok)continue;return await ac.decodeAudioData(await r.arrayBuffer())}catch(e){}}return null})();return bufs[k]}
+let cur=null,want=null;
+function stopMusic(){if(!cur)return;const {src,g}=cur;cur=null;try{g.gain.cancelScheduledValues(ac.currentTime);g.gain.setTargetAtTime(0,ac.currentTime,.12);src.stop(ac.currentTime+.6)}catch(e){}}
+async function music(k,loop){want=k;stopMusic();if(!ac||!k)return;
+  const b=await load(k);if(want!==k||!b||cur)return;
+  const src=ac.createBufferSource(),g=ac.createGain(),t=ac.currentTime;src.buffer=b;src.loop=loop;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(k==='play'?.55:.75,t+.3);src.connect(g);g.connect(out());src.start(t);
+  cur={src,g,k,fast:false};src.onended=()=>{if(cur&&cur.src===src)cur=null}}
+function ensureAudio(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state!=='running')ac.resume();for(const k in TRACKS)load(k)}catch(e){ac=null}}
+/* 自動再生は禁止されているので、最初に画面に触れたときにタイトル曲を流す */
+for(const ev of ['click','touchend'])document.addEventListener(ev,()=>ensureAudio(),{passive:true});
+$('open').onclick=()=>{ensureAudio();music('title',true);$('gate').hidden=true;$('rules').hidden=false;$('go').focus()};
+function setMute(v){muted=v;try{localStorage.setItem('totoiGuardMute',v?'1':'0')}catch(e){}
+  $('snd').textContent=v?'音：オフ':'音：オン';$('snd').setAttribute('aria-pressed',String(!v));
+  if(master)master.gain.setTargetAtTime(v?0:1,ac.currentTime,.03)}
+$('snd').onclick=()=>setMute(!muted);setMute(muted);
+function reset(){score=0;breaches=0;combo=0;gauge=100;time=LIMIT;elapsed=0;foes=[];parts=[];texts=[];hearts=[];spawnT=.6;react=0;st='play';$('start').hidden=true;$('over').hidden=true}
+function begin(){ensureAudio();reset();music('play',true)}
+$('go').onclick=begin;$('again').onclick=begin;
+
+function spawn(){
+  const lv=elapsed/LIMIT,r=Math.random();
+  let t=r<.12+lv*.18?'fly':r<.3+lv*.2?'big':'walk';
+  if(elapsed<3)t='walk';
+  const side=Math.random()<.5?-1:1,cx=W/2;
+  const f={t,hp:t==='big'?2:1,r:t==='big'?34:t==='fly'?19:25,ph:Math.random()*6,dead:false,vx:0,vy:0,rot:0,vr:0,flash:0,side};
+  if(t==='fly'){f.x=cx+side*(140+Math.random()*Math.max(40,W/2-180));f.y=-30;f.sp=110+lv*80}
+  else{f.x=side<0?-40:W+40;f.y=GY-f.r;f.sp=(t==='big'?48:72)+lv*60}
+  foes.push(f);
+}
+
+function burst(x,y,n,col){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=150+Math.random()*350;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:.5+Math.random()*.3,c:col||(Math.random()<.5?'#ffd84d':'#ffffff'),s:3+Math.random()*4})}}
+function say(x,y,s,c,z){texts.push({x,y,s,c:c||'#fff',z:z||40,l:.8})}
+
+const WORDS=['ドーン！','どかーん！','場外！','おじゃまでした！','ふっとべ！'];
+cv.addEventListener('pointerdown',e=>{
+  if(st!=='play')return;
+  e.preventDefault();
+  const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+  let hit=null,bd=1e9;
+  for(const f of foes){if(f.dead)continue;const d=Math.hypot(f.x-x,f.y-y);if(d<f.r+24&&d<bd){bd=d;hit=f}}
+  if(!hit){combo=0;sfx(220,110,.08,'triangle');return}
+  const dir=hit.x<W/2?-1:1;
+  hit.hp--;
+  if(hit.hp>0){hit.flash=.15;hit.x+=dir*45;burst(hit.x,hit.y,6);say(hit.x,hit.y-40,'ゴン！','#ffd84d',30);sfx(300,150,.1);if(!calm)shake=4;return}
+  hit.dead=true;hit.vx=dir*(520+Math.random()*320);hit.vy=-(480+Math.random()*260);hit.vr=dir*(10+Math.random()*8);
+  combo++;const pts=10*Math.min(combo,10)*(hit.t==='big'?2:hit.t==='fly'?3:1);score+=pts;
+  burst(hit.x,hit.y,14);
+  say(hit.x,hit.y-36,WORDS[Math.random()*WORDS.length|0],'#fff',combo>4?52:42);
+  say(hit.x,hit.y+6,'+'+pts,'#ffd84d',26);
+  if(!calm)shake=Math.min(14,6+combo);hitstop=.045;
+  boom(combo);
+});
+
+function update(dt){
+  for(const p of petals){p.y+=p.v*dt;p.x+=Math.sin(p.p+=dt)*12*dt-8*dt;if(p.y>H){p.y=-10;p.x=Math.random()*W*1.2}}
+  if(st==='play'){
+    elapsed+=dt;time-=dt;
+    spawnT-=dt;if(spawnT<=0){spawn();spawnT=Math.max(.38,1.3-elapsed/LIMIT*.9)*(.7+Math.random()*.6)}
+    gauge=Math.min(100,gauge+1.5*dt);
+    if(cur&&cur.k==='play'&&!cur.fast&&time<10){cur.fast=true;try{cur.src.playbackRate.setTargetAtTime(1.08,ac.currentTime,.3)}catch(e){}}
+    if(time<=0||gauge<=0)finish();
+  }
+  const cx=W/2;
+  for(const f of foes){
+    f.ph+=dt*10;f.flash=Math.max(0,f.flash-dt);
+    if(f.dead){f.vy+=1300*dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.rot+=f.vr*dt;if(f.y<-60&&!f.tw){f.tw=1;burst(Math.max(20,Math.min(W-20,f.x)),18,8,'#fff');say(Math.max(60,Math.min(W-60,f.x)),40,'キラーン','#fff',24);kiran()}continue}
+    if(st!=='play')continue;
+    if(f.t==='fly'){const tx=cx,ty=360,dx=tx-f.x,dy=ty-f.y,d=Math.hypot(dx,dy)||1;f.x+=dx/d*f.sp*dt+Math.sin(f.ph*.5)*40*dt;f.y+=dy/d*f.sp*dt}
+    else{f.x+=(f.x<cx?1:-1)*f.sp*dt;f.y=GY-f.r-Math.abs(Math.sin(f.ph*.6))*6}
+    if(Math.abs(f.x-cx)<62&&f.y>330){
+      f.gone=1;gauge-=20;breaches++;combo=0;react=1.2;burst(f.x,f.y,10,'#9d8cb8');say(cx,300,'尊さダウン…','#ffd0dc',36);if(!calm)shake=16;sfx(160,60,.35,'sawtooth');
+    }
+  }
+  foes=foes.filter(f=>!f.gone&&f.y<H+120&&f.x>-300&&f.x<W+300);
+  for(const p of parts){p.vy+=600*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt}parts=parts.filter(p=>p.l>0);
+  for(const t of texts){t.y-=50*dt;t.l-=dt}texts=texts.filter(t=>t.l>0);
+  if(Math.random()<gauge/100*dt*3)hearts.push({x:cx+(Math.random()-.5)*24,y:GY+14-GH*(1-HEADY),l:1.6,s:8+Math.random()*6});
+  for(const h of hearts){h.y-=40*dt;h.x+=Math.sin(h.l*5)*12*dt;h.l-=dt}hearts=hearts.filter(h=>h.l>0);
+  shake=Math.max(0,shake-dt*40);react=Math.max(0,react-dt);
+}
+
+function finish(){
+  st='over';
+  const ranks=[[0,'見習いガーディアン'],[1000,'尊さの番人'],[2500,'百合の守護者'],[3500,'ふたりを見守る壁']];
+  let rk=ranks[0][1];for(const [s,n] of ranks)if(score>=s)rk=n;
+  const nb=score>best;if(nb){best=score;try{localStorage.setItem('totoiGuardBest',best)}catch(e){}}
+  const tier=gauge<=0?'low':breaches===0?'high':'mid';
+  const END={high:['守りきった！','ふたりの世界は今日も平和。手をつないだふたりは、守ってくれた誰かのことを知らない。それでいい。'],
+    mid:['あと一歩…','少し距離はあるけれど、照れくさそうに目が合ったふたり。この間が縮まる日は近い。（割り込まれた回数：'+breaches+'回）'],
+    low:['割り込まれた…','ベンチの真ん中には、得意げにくつろぐおじゃま虫。ふたりはうつむいたまま……。']};
+  $('ovh').textContent=END[tier][0];$('story').textContent=END[tier][1];
+  $('over').style.backgroundImage=`linear-gradient(180deg,rgba(31,18,38,0) 58%,rgba(31,18,38,.88) 86%),url(end-${tier}.webp)`;
+  $('fs').textContent=score;$('rk').textContent='称号：'+rk;
+  $('bs').textContent=nb?'自己ベスト更新！':'自己ベスト '+best;
+  $('over').hidden=false;music(tier,false);
+}
+
+/* ---------- drawing ---------- */
+function heart(x,y,s,c){ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x,y+s*.35);ctx.bezierCurveTo(x-s,y-s*.4,x-s*.45,y-s,x,y-s*.45);ctx.bezierCurveTo(x+s*.45,y-s,x+s,y-s*.4,x,y+s*.35);ctx.fill()}
+const img={};
+for(const n of ['bg','girls','girls-hit','bug-walk','bug-big','bug-fly','end-high','end-mid','end-low']){const i=new Image();i.src=n+'.webp';img[n]=i}
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+/* 背景：草地（元画像のy=1560付近）を地面の高さに合わせ、画面を覆う倍率で置く */
+function scene(){
+  const b=img.bg;
+  if(ok(b)){const s=Math.max(W/b.naturalWidth,GY/1560,(H-GY)/(b.naturalHeight-1560));
+    ctx.drawImage(b,(W-b.naturalWidth*s)/2,GY-1560*s,b.naturalWidth*s,b.naturalHeight*s)}
+  else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#b79be0');g.addColorStop(.7,'#ffb0c4');g.addColorStop(.8,'#8fc48a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+}
+/* ふたり＋ベンチ：高さ300、ふたりの間（画像の横52%）を中央に */
+const GH=300,GAPX=.52,HEADY=.3;
+function girls(cx){
+  const hit=react>.6&&ok(img['girls-hit']),g=hit?img['girls-hit']:img.girls;if(!ok(g))return;
+  const w=GH*g.naturalWidth/g.naturalHeight,top=GY+14-GH;
+  const jit=react>0&&!calm?Math.sin(react*60)*3:0;
+  ctx.fillStyle='rgba(50,20,40,.28)';ctx.beginPath();ctx.ellipse(cx,GY+12,w*.5,12,0,0,7);ctx.fill();
+  ctx.drawImage(g,cx-w*GAPX+jit,top,w,GH);
+  if(react>0&&!hit){ctx.globalAlpha=Math.min(1,react);ctx.font='800 34px "M PLUS Rounded 1c",sans-serif';ctx.textAlign='center';ctx.lineWidth=6;ctx.strokeStyle='#5a2448';ctx.strokeText('……',cx,top-6);ctx.fillStyle='#fff';ctx.fillText('……',cx,top-6);ctx.globalAlpha=1}
+}
+/* 虫：元の絵は通常・大型が右向き、飛ぶ虫が左向き。進む方向に合わせて反転 */
+const BUG={walk:['bug-walk',2.9,1],big:['bug-big',2.9,1],fly:['bug-fly',3.3,-1]};
+function bug(f){
+  const [key,k,face]=BUG[f.t],im=img[key];
+  ctx.save();ctx.translate(f.x,f.y);
+  if(f.dead)ctx.rotate(f.rot);
+  if(!f.dead&&f.t!=='fly'){ctx.fillStyle='rgba(40,20,40,.25)';ctx.beginPath();ctx.ellipse(0,f.r+6,f.r*.9,5,0,0,7);ctx.fill()}
+  const goingRight=f.dead?f.vx>0:f.x<W/2;
+  ctx.scale((goingRight?1:-1)*face,1);
+  if(!f.dead&&f.t!=='fly'){const q=Math.abs(Math.sin(f.ph*.6))*.06;ctx.scale(1+q,1-q)}
+  if(f.flash>0)ctx.filter='brightness(2.4)';
+  if(ok(im)){let h,w;if(f.t==='fly'){w=f.r*k;h=w*im.naturalHeight/im.naturalWidth}else{h=f.r*k;w=h*im.naturalWidth/im.naturalHeight}
+    ctx.drawImage(im,-w/2,f.t==='fly'?-h/2:f.r+8-h,w,h)}
+  else{ctx.fillStyle='#6a5a8e';ctx.beginPath();ctx.arc(0,0,f.r,0,7);ctx.fill()}
+  ctx.restore();
+  if(f.dead){ctx.save();ctx.translate(f.x,f.y-f.r);ctx.fillStyle='#ffe066';for(let i=0;i<3;i++){const a=f.ph*.8+i*2.1;ctx.beginPath();ctx.arc(Math.cos(a)*f.r*.8,Math.sin(a)*6-8,4,0,7);ctx.fill()}ctx.restore()}
+}
+function draw(){
+  ctx.setTransform(sc,0,0,sc,0,0);
+  if(shake>0)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+  scene();const cx=W/2;
+  girls(cx);
+  for(const h of hearts){ctx.globalAlpha=Math.min(1,h.l);heart(h.x,h.y,h.s,'#ff6f91')}ctx.globalAlpha=1;
+  ctx.fillStyle='#ffe3ec';for(const p of petals){ctx.beginPath();ctx.ellipse(p.x,p.y,4,2.5,p.p,0,7);ctx.fill()}
+  for(const f of foes)bug(f);
+  for(const p of parts){ctx.globalAlpha=Math.max(0,p.l*2);ctx.fillStyle=p.c;ctx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s)}ctx.globalAlpha=1;
+  ctx.textAlign='center';ctx.lineJoin='round';
+  for(const t of texts){ctx.globalAlpha=Math.min(1,t.l*2);ctx.font=`800 ${t.z}px "M PLUS Rounded 1c",sans-serif`;ctx.lineWidth=6;ctx.strokeStyle='#5a2448';ctx.strokeText(t.s,t.x,t.y);ctx.fillStyle=t.c;ctx.fillText(t.s,t.x,t.y)}ctx.globalAlpha=1;
+  if(st==='play'&&combo>=3){ctx.font='800 30px "M PLUS Rounded 1c",sans-serif';ctx.lineWidth=6;ctx.strokeStyle='#5a2448';const s=combo+' コンボ！';ctx.strokeText(s,cx,60);ctx.fillStyle='#ffd84d';ctx.fillText(s,cx,60)}
+}
+
+let shown='';
+function hud(){const s=score+'|'+combo+'|'+Math.ceil(Math.max(0,time))+'|'+Math.round(gauge);if(s===shown)return;shown=s;
+  $('sc').textContent=score;$('cb').textContent=combo;$('tm').textContent=Math.ceil(Math.max(0,time));$('gg').style.width=Math.max(0,gauge)+'%'}
+function loop(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;
+  if(hitstop>0)hitstop-=dt;else update(dt);
+  draw();hud();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
