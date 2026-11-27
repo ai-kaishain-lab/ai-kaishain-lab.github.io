@@ -47,7 +47,7 @@ h1{font-size:clamp(24px,4vw,34px);line-height:1.1;margin:4px 0 12px;font-weight:
 .ov.end{align-items:end;background-color:#1f1226;background-size:cover;background-position:center 30%;background-repeat:no-repeat}
 .ov.end .box{text-shadow:0 2px 8px rgba(40,10,40,.8)}
 @media(min-width:601px){.ov.end{padding:16px 24px}.ov.end .box{max-width:none;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"h big" "s rk" "s bs" "s btn";column-gap:28px;text-align:left;align-items:end}
-.ov.end h2{grid-area:h;margin:0}.ov.end .story{grid-area:s;align-self:start;margin:6px 0 0;max-width:34em}.ov.end .big{grid-area:big;text-align:center}.ov.end .rank{grid-area:rk;text-align:center;margin:2px 0}.ov.end #bs{grid-area:bs;text-align:center;margin:0 0 8px}.ov.end button{grid-area:btn;justify-self:center}}
+.ov.end h2{grid-area:h;margin:0}.ov.end .story{grid-area:s;align-self:start;margin:6px 0 0;max-width:34em}.ov.end .big{grid-area:big;text-align:center}.ov.end .rank{grid-area:rk;text-align:center;margin:2px 0}.ov.end #bs{grid-area:bs;text-align:center;margin:0 0 8px}.ov.end .acts{grid-area:btn;justify-self:center}}
 .story{font-size:15px;line-height:1.6}
 @media(max-width:600px){.ov.end{background-size:100% auto;background-position:center top;padding:10px}.ov.end h2{font-size:24px;margin-bottom:4px}.ov.end .big{font-size:40px}.ov.end p{margin-bottom:8px}.story{font-size:13px}}
 .ov.art .box{text-shadow:0 2px 8px rgba(40,10,40,.7)}
@@ -58,6 +58,9 @@ h1{font-size:clamp(24px,4vw,34px);line-height:1.1;margin:4px 0 12px;font-weight:
 .rank{font-size:20px;font-weight:800;margin:8px 0 4px}
 button{font:inherit;font-weight:800;font-size:18px;min-height:48px;padding:0 28px;border:0;border-radius:999px;background:var(--accent);color:#3a2100;cursor:pointer;box-shadow:0 4px 0 #c99a00}
 button:active{transform:translateY(2px);box-shadow:0 2px 0 #c99a00}
+.acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+button.shr{background:rgba(255,255,255,.14);color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.7) inset}
+button.shr:active{box-shadow:0 0 0 2px rgba(255,255,255,.7) inset}
 button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .how{margin-top:16px;color:var(--sub);font-size:15px}
 .how b{color:var(--ink)}
@@ -87,7 +90,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:3px}
       <div class="big" id="fs">0</div>
       <div class="rank" id="rk"></div>
       <p id="bs"></p>
-      <button id="again">もう一回</button>
+      <div class="acts"><button id="again">もう一回</button><button class="shr" id="share">結果をシェア</button></div>
     </div></div>
   </div>
   <p class="how"><b>遊び方</b>　左右から歩いてくる虫は1回、ヘルメットの大きい虫は2回、空から急降下してくる虫は小さいので狙って叩く。連続で当てるとコンボで得点が増え、空振りするとコンボが切れます。</p>
@@ -149,6 +152,13 @@ $('snd').onclick=()=>setMute(!muted);setMute(muted);
 function reset(){score=0;breaches=0;combo=0;gauge=100;time=LIMIT;elapsed=0;foes=[];parts=[];texts=[];hearts=[];spawnT=.6;react=0;st='play';$('start').hidden=true;$('over').hidden=true}
 function begin(){ensureAudio();reset();music('play',true)}
 $('go').onclick=begin;$('again').onclick=begin;
+let shareText='';
+$('share').onclick=async()=>{
+  const url='https://ai-kaishain-lab.github.io/hasamaruna/';
+  try{if(navigator.share){await navigator.share({text:shareText,url});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const w=window.open('https://x.com/intent/post?text='+encodeURIComponent(shareText)+'&url='+encodeURIComponent(url),'_blank');
+  if(w){w.opener=null}else{try{await navigator.clipboard.writeText(shareText+' '+url);$('share').textContent='コピーしました'}catch(e){$('share').textContent='コピーできませんでした'}}
+};
 
 function spawn(){
   const lv=elapsed/LIMIT,r=Math.random();
@@ -225,6 +235,8 @@ function finish(){
   $('over').style.backgroundImage=`linear-gradient(180deg,rgba(31,18,38,0) 58%,rgba(31,18,38,.88) 86%),url(end-${tier}.webp)`;
   $('fs').textContent=score;$('rk').textContent='称号：'+rk;
   $('bs').textContent=nb?'自己ベスト更新！':'自己ベスト '+best;
+  shareText=`百合の間に挟まるな！ ${score}点、称号「${rk}」。${END[tier][0]} #百合の間に挟まるな`;
+  $('share').textContent='結果をシェア';
   $('over').hidden=false;music(tier,false);
 }
 
