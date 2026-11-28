@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<!-- © 2026 会社員のAI実験室 https://ai-kaishain-lab.github.io/ -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>解釈違いを弾け！｜会社員のAI実験室</title>
+<meta name="description" content="推しカプの場面カードを、物語の二人らしいかどうかでスワイプ仕分けするゲーム。会社員のAI実験室がAIと作りました。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="解釈違いを弾け！｜会社員のAI実験室">
+<meta property="og:description" content="「この子は、そんなこと言わない」二人らしい場面だけをマッチさせる、推しカプ解釈マッチングゲーム。">
+<meta property="og:url" content="https://ai-kaishain-lab.github.io/kaishaku/">
+<meta property="og:image" content="https://ai-kaishain-lab.github.io/og-kaishaku.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root{
+    --bg1:#fff3f8; --bg2:#efe9ff; --ink:#3a2b4a; --sub:#8a7a9a;
+    --ok:#ff5c8a; --ng:#5a6cff; --gold:#e8b23a; --rei:#5a6cff; --haru:#ff8a4c;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;touch-action:none;
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));user-select:none;-webkit-user-select:none}
+  button{font-family:inherit}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:22px 20px;text-align:center}
+  .screen.active{display:flex}
+  .appbar{font-weight:900;font-size:13px;letter-spacing:.08em;color:#fff;background:linear-gradient(90deg,var(--ok),#b45cff);padding:4px 14px;border-radius:99px;margin-bottom:10px}
+  h1{font-size:34px;margin:0 0 6px;letter-spacing:.03em;
+    background:linear-gradient(90deg,var(--ok),#b45cff,var(--ng));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:14px;line-height:1.7;margin:0 0 18px}
+  .pair{display:flex;gap:12px;justify-content:center;margin:0 0 18px}
+  .chara{background:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 4px 14px rgba(90,60,140,.12);font-size:12px;line-height:1.5;width:140px;color:var(--sub)}
+  .chara b{font-size:18px;display:block;margin-top:6px}
+  .pairimg{display:block;width:292px;height:min(32vh,258px);object-fit:cover;object-position:center top;margin:-4px auto 0;mix-blend-mode:multiply}
+  .chara .ava{display:none}
+  .chara.rei b{color:var(--rei)}.chara.haru b{color:var(--haru)}
+  .ava{width:64px;height:64px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:26px;color:#fff;overflow:hidden;background-size:cover;background-position:center top}
+  .ava.rei{background-color:var(--rei)}.ava.haru{background-color:var(--haru)}
+  .ava.sm{width:48px;height:48px;font-size:15px}
+  .ava.react{position:absolute;top:calc(30% - 92px);left:50%;margin-left:-32px;opacity:0;z-index:4;pointer-events:none;border:3px solid #fff;box-shadow:0 4px 12px rgba(90,60,140,.2)}
+  .ava.big{width:96px;height:96px;margin-bottom:6px;border:3px solid #fff;box-shadow:0 4px 12px rgba(90,60,140,.15)}
+  .modes{display:flex;gap:8px;width:100%;max-width:340px;margin-bottom:10px}
+  .mbtn{flex:1;border:none;border-radius:16px;padding:14px 6px;background:#fff;color:var(--ink);font-size:15px;font-weight:800;
+    box-shadow:0 4px 14px rgba(90,60,140,.12);cursor:pointer}
+  .mbtn small{display:block;font-size:11px;font-weight:500;color:var(--sub);margin-top:2px}
+  .mbtn:active{transform:scale(.96)}
+  .linkbtn{border:none;background:none;color:#b45cff;font-size:14px;font-weight:700;padding:10px;cursor:pointer;text-decoration:underline}
+  .howto{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.7}
+
+  /* story */
+  #story{justify-content:flex-start;overflow-y:auto;touch-action:pan-y;padding:24px 18px 40px}
+  .paper{background:#fff;border-radius:20px;padding:24px 20px;max-width:440px;width:100%;text-align:left;box-shadow:0 8px 24px rgba(90,60,140,.12)}
+  .paper h2{text-align:center;font-size:22px;margin:0 0 4px}
+  .paper .by{text-align:center;color:var(--sub);font-size:12px;margin:0 0 18px}
+  .paper p{font-size:16px;line-height:2;margin:0 0 14px;text-indent:1em}
+  .paper p.line{text-indent:0}
+  .story-cta{margin-top:18px;width:100%;max-width:440px}
+
+  /* game */
+  #game{justify-content:flex-start;padding-top:14px}
+  .hud{width:100%;max-width:420px;display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:6px}
+  .hud .tag{background:#fff;border-radius:999px;padding:4px 12px;font-weight:700;box-shadow:0 2px 8px rgba(90,60,140,.1)}
+  .timebar{width:100%;max-width:420px;height:8px;background:rgba(255,255,255,.7);border-radius:99px;overflow:hidden;margin-bottom:6px}
+  .timebar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--ok),#b45cff)}
+  .combo{height:22px;font-weight:800;color:var(--ok);font-size:16px}
+  .stage{position:relative;width:100%;max-width:360px;flex:1;max-height:460px;display:flex;align-items:center;justify-content:center}
+  .card{position:absolute;width:90%;aspect-ratio:3/4;max-height:100%;background:#fff;border-radius:22px;overflow:hidden;
+    box-shadow:0 10px 30px rgba(90,60,140,.2);display:flex;flex-direction:column;touch-action:none;will-change:transform;cursor:grab}
+  .card .pic{flex:1.1;background:linear-gradient(160deg,#f3ecff,#ffe9f1);background-size:cover;background-position:center 30%;position:relative;display:flex;align-items:center;justify-content:center;gap:10px}
+  .card .num{position:absolute;left:12px;top:10px;font-size:12px;font-weight:800;color:#fff;background:rgba(58,43,74,.45);padding:2px 10px;border-radius:99px}
+  .card .body{flex:1;padding:14px 18px 22px;display:flex;align-items:center;justify-content:center;font-size:19px;line-height:1.6;font-weight:700;text-align:center}
+  .card .body span{word-break:keep-all;overflow-wrap:anywhere}
+  .card.official{border:3px solid var(--gold)}
+  .card .badge{position:absolute;right:12px;top:10px;font-size:12px;font-weight:800;color:#fff;background:var(--gold);padding:2px 10px;border-radius:99px}
+  .card .stamp{position:absolute;top:44px;font-size:24px;font-weight:900;padding:4px 12px;border:4px solid;border-radius:12px;opacity:0;background:rgba(255,255,255,.85);z-index:2}
+  .card .stamp.like{left:14px;color:var(--ok);border-color:var(--ok);transform:rotate(-12deg)}
+  .card .stamp.nope{right:14px;color:var(--ng);border-color:var(--ng);transform:rotate(12deg)}
+  .cardtimer{position:absolute;bottom:10px;left:18px;right:18px;height:5px;background:#f0eaf7;border-radius:9px;overflow:hidden}
+  .cardtimer i{display:block;height:100%;background:#c9b6e6;width:100%}
+  .btns{display:flex;gap:28px;margin:12px 0 14px}
+  .rbtn{width:72px;height:72px;border-radius:50%;border:none;background:#fff;font-size:30px;font-weight:900;box-shadow:0 6px 16px rgba(90,60,140,.18);cursor:pointer}
+  .rbtn.nope{color:var(--ng)}.rbtn.like{color:var(--ok)}
+  .rbtn:active{transform:scale(.92)}
+  .hint{font-size:12px;color:var(--sub);display:flex;gap:40px}
+  .flash{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
+  .pop{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);font-weight:900;font-size:26px;pointer-events:none;opacity:0;white-space:nowrap;z-index:4}
+  .match{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;z-index:6;
+    background:radial-gradient(circle,rgba(255,92,138,.28),rgba(180,92,255,.12) 60%,transparent 75%)}
+  .match .mt{font-size:38px;font-weight:900;color:#fff;text-shadow:0 2px 0 var(--ok),0 0 18px rgba(255,92,138,.8);font-style:italic}
+  .match .ms{display:flex;gap:6px;align-items:center;margin-top:8px;font-size:24px}
+  @keyframes popup{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+  @keyframes matchin{0%{opacity:0;transform:scale(.6)}25%{opacity:1;transform:scale(1.05)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+  @keyframes reactin{0%{opacity:0;transform:scale(.6)}25%{opacity:1;transform:scale(1.1)}75%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(-20px)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .shake{animation:shake .35s}
+  #btnMute{position:fixed;bottom:12px;right:12px;z-index:20;width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.85);font-size:20px;box-shadow:0 2px 8px rgba(90,60,140,.15);cursor:pointer}
+  .countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:90px;font-weight:900;color:#b45cff;background:rgba(255,255,255,.55);z-index:5}
+
+  /* result */
+  #result{justify-content:flex-start;overflow-y:auto;touch-action:pan-y;padding-top:26px;padding-bottom:40px}
+  .rcard{background:#fff;border-radius:22px;padding:22px 20px;width:100%;max-width:380px;box-shadow:0 10px 30px rgba(90,60,140,.15)}
+  .rlabel{font-size:13px;color:var(--sub)}
+  .rtype{font-size:28px;font-weight:900;margin:4px 0 10px;color:#b45cff}
+  .rcomment{font-size:14px;line-height:1.8;text-align:left;margin:0 0 14px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;text-align:left}
+  .stats div{background:#f7f2fd;border-radius:10px;padding:8px 10px}
+  .stats b{font-size:18px;display:block}
+  .score{font-size:15px;margin-bottom:12px}.score b{font-size:30px;color:var(--ok)}
+  .review{width:100%;max-width:380px;margin-top:16px;text-align:left}
+  .review h3{font-size:15px;margin:0 0 8px}
+  .review .item{background:#fff;border-radius:14px;padding:10px 12px;margin-bottom:8px;font-size:13px;line-height:1.6;box-shadow:0 3px 10px rgba(90,60,140,.08)}
+  .review .item b{display:block;font-size:14px}
+  .review .item .why{color:var(--sub)}
+  .review .item .ans{font-weight:800}
+  .actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:380px;margin-top:16px}
+  .abtn{border:none;border-radius:14px;padding:14px;font-size:16px;font-weight:700;cursor:pointer}
+  .abtn.main{background:linear-gradient(90deg,var(--ok),#b45cff);color:#fff}
+  .abtn.sub{background:#fff;color:var(--ink);box-shadow:0 3px 10px rgba(90,60,140,.12)}
+  .foot{font-size:11px;color:var(--sub);margin-top:16px}
+</style>
+</head>
+<body>
+
+<button id="btnMute" aria-label="音のオン・オフ">🔊</button>
+<!-- タイトル -->
+<section id="title" class="screen active">
+  <div class="appbar">推しカプ解釈マッチング</div>
+  <h1>解釈違いを弾け！</h1>
+  <p class="lead">「この子は、そんなこと言わない」<br>二人らしい場面だけをマッチさせよう。</p>
+  <img class="pairimg" src="img/pair.jpg" alt="レイとハル">
+  <div class="pair">
+    <div class="chara rei"><div class="ava rei" data-img="rei">レ</div><b>レイ</b>3年・生徒会長<br>無口で表情が読めない</div>
+    <div class="chara haru"><div class="ava haru" data-img="haru">ハ</div><b>ハル</b>1年・写真部<br>元気でまっすぐ</div>
+  </div>
+  <div class="modes">
+    <button class="mbtn" data-m="easy">イージー<small>ゆっくり</small></button>
+    <button class="mbtn" data-m="normal">ノーマル<small>ふつう</small></button>
+    <button class="mbtn" data-m="hard">ハード<small>古参向け</small></button>
+  </div>
+  <button class="linkbtn" id="btnReadStory">二人の物語を読む（約2分）</button>
+  <p class="howto">右スワイプ＝解釈一致 ♡ ／ 左スワイプ＝解釈違い ✕<br>判断の根拠は、すべて物語の中にあります</p>
+</section>
+
+<!-- 物語 -->
+<section id="story" class="screen">
+  <article class="paper">
+    <h2>傘の人</h2>
+    <p class="by">― レイとハルの物語 ―</p>
+    <p>四月の終わり、雨の放課後だった。昇降口で空を見上げていたハルの前に、黒い傘が差し出された。</p>
+    <p class="line">「……使え」</p>
+    <p>三年の、レイ先輩だった。生徒会長で、いつも表情が読めない人。ハルが何か言う前に、先輩は鞄を頭にのせて、雨の中へ歩いていった。肩までずぶ濡れなのに、一度も振り返らなかった。</p>
+    <p>それから、ハルは屋上で先輩を見つけるようになった。</p>
+    <p class="line">「レイ先輩！　今日もここですか！」</p>
+    <p>先輩は「ああ」とだけ答えて、パンを半分に割ってよこす。ハルが購買に間に合わなかった日には、なぜか最初から二つ買ってある。理由を聞いても「……多かった」としか言わない。</p>
+    <p>先輩は口数が少ない。ほかの人のことは名字で呼ぶのに、ハルのことだけは「ハル」と呼ぶ。用があるときも、名前をひとつ呼ぶだけで済ませてしまう。</p>
+    <p>そして、嘘がつけない。ハルが文化祭用に選んだ服を見て、先輩は真顔で「似合ってない」と言った。ハルがむくれていると、十分後、別の服を持って戻ってきた。そっちは、悔しいくらい似合った。</p>
+    <p>ハルは写真部だ。思ったことがすぐ顔に出るから、隠しごとには向いていない。負けず嫌いで、腕相撲で先輩に負けた日は「もう一回！」を五回言った。怖い話だけは本当にだめで、肝試しのあいだじゅう、先輩の袖をつかんで離さなかった。</p>
+    <p>ハルのカメラには、先輩の写真がこっそり増えている。ほとんどが横顔だ。正面から撮ろうとすると、先輩はすぐに顔をそらすから。</p>
+    <p>ハルが知っている先輩の秘密は、二つだけ。</p>
+    <p>ひとつは、朝が弱いこと。一限の前、生徒会室で寝ぐせのままぼんやりしている先輩を、ハルだけが見たことがある。</p>
+    <p>もうひとつは、甘いものに目がないこと。コンビニの新作プリンの前で、先輩の足は必ず止まる。</p>
+    <p>先輩が泣いたところを、ハルは見たことがない。生徒会でどんなに大変なことがあっても、先輩は人前で弱音を吐かない。</p>
+    <p>ただ一度だけ、あの雨の日のことを聞いたとき、先輩はほんの少しだけ口角を上げた。</p>
+    <p class="line">「……濡れてるのが、放っておけなかった」</p>
+    <p>その横顔を、ハルは撮らなかった。撮らなくても、たぶんずっと覚えているから。</p>
+  </article>
+  <div class="story-cta">
+    <button class="abtn main" id="btnStoryGo" style="width:100%">読んだ！ はじめる</button>
+    <button class="linkbtn" id="btnStoryBack">タイトルに戻る</button>
+  </div>
+</section>
+
+<!-- ゲーム -->
+<section id="game" class="screen">
+  <div class="hud">
+    <span class="tag" id="hudMode"></span>
+    <span><b id="hudScore">0</b> pt</span>
+    <span id="hudTime">40</span>
+  </div>
+  <div class="timebar"><i id="timeFill"></i></div>
+  <div class="combo" id="combo"></div>
+  <div class="stage" id="stage">
+    <div class="pop" id="pop"></div>
+    <div class="ava react" id="react"></div>
+    <div class="match" id="match">
+      <div class="mt">解釈マッチ！</div>
+      <div class="ms"><div class="ava sm rei" data-img="rei_smile">レ</div>💞<div class="ava sm haru" data-img="haru">ハ</div></div>
+    </div>
+  </div>
+  <div class="btns">
+    <button class="rbtn nope" id="btnNope" aria-label="解釈違い">✕</button>
+    <button class="rbtn like" id="btnLike" aria-label="解釈一致">♡</button>
+  </div>
+  <div class="hint"><span>← 解釈違い</span><span>解釈一致 →</span></div>
+  <div class="flash" id="flash"></div>
+</section>
+
+<!-- 結果 -->
+<section id="result" class="screen">
+  <div class="rcard">
+    <div class="rlabel" id="rMode"></div>
+    <div class="ava big" id="rFace"></div>
+    <div class="rlabel">あなたの診断結果</div>
+    <div class="rtype" id="rType"></div>
+    <div class="score"><b id="rScore">0</b> pt</div>
+    <p class="rcomment" id="rComment"></p>
+    <div class="stats">
+      <div>正しく仕分け<b id="sCorrect">0</b></div>
+      <div>最大コンボ<b id="sCombo">0</b></div>
+      <div>通した解釈違い<b id="sAccWrong">0</b></div>
+      <div>弾いた解釈一致<b id="sRejRight">0</b></div>
+    </div>
+  </div>
+  <div class="review" id="review"></div>
+  <div class="actions">
+    <button class="abtn main" id="btnShare">結果をシェアする</button>
+    <button class="abtn sub" id="btnRetry">同じモードでもう一度</button>
+    <button class="abtn sub" id="btnStory2">物語を読み返す</button>
+    <button class="abtn sub" id="btnTitle">タイトルへ</button>
+  </div>
+  <p class="foot">登場人物・物語はすべてオリジナルです。</p>
+</section>
+
+<script>
+{
+  // 絵の差し替え用：Museで作った画像をここに指定（例 "img/rei.png"）。空なら仮の丸アイコン。
+  const IMG = { rei:"img/rei.jpg", haru:"img/haru.jpg", rei_smile:"img/rei_smile.jpg", haru_pout:"img/haru_pout.jpg", haru_scared:"img/haru_scared.jpg", scenes:{1:"img/scenes/01.jpg",2:"img/scenes/02.jpg",3:"img/scenes/03.jpg",4:"img/scenes/04.jpg",5:"img/scenes/05.jpg",6:"img/scenes/06.jpg",7:"img/scenes/07.jpg",8:"img/scenes/08.jpg",9:"img/scenes/09.jpg",10:"img/scenes/10.jpg",11:"img/scenes/11.jpg",12:"img/scenes/12.jpg",13:"img/scenes/13.jpg",14:"img/scenes/14.jpg",15:"img/scenes/15.jpg",16:"img/scenes/16.jpg",17:"img/scenes/17.jpg",18:"img/scenes/18.jpg",19:"img/scenes/19.jpg",20:"img/scenes/20.jpg"} };
+
+  const MODES = {
+    easy:   {name:"イージー", from:6000, to:4000},
+    normal: {name:"ノーマル", from:4500, to:2500},
+    hard:   {name:"ハード",   from:3000, to:1200},
+  };
+
+  // ok: 解釈一致か / why: 物語上の根拠 / who: カードに出す人物
+  const CARDS = [
+    {id:1,  t:"レイが黙って、ハルの分のパンも買ってくる", ok:true,  who:"rh", why:"レイは言葉より行動で示す人。購買のパンを最初から二つ買っていた。"},
+    {id:2,  t:"ハルの話を聞きながら、レイがほんの少しだけ口角を上げる", ok:true, who:"rh", why:"レイの表情はほとんど動かない。笑うとしても、ほんの少しだけ。"},
+    {id:3,  t:"「……ハル」名前を呼んだだけで用件を済ませるレイ", ok:true, who:"r", why:"レイは口数が少なく、名前をひとつ呼ぶだけで用を済ませる。"},
+    {id:4,  t:"コンビニの新作プリンの前で、レイの足が止まる", ok:true, who:"r", why:"レイの秘密その2。甘いものに目がない。"},
+    {id:5,  t:"一限前の生徒会室、寝ぐせのままぼんやりしているレイ", ok:true, who:"r", why:"レイの秘密その1。朝が弱い。"},
+    {id:6,  t:"「レイ先輩！ こっち向いてください！」カメラを構えるハル", ok:true, who:"h", why:"ハルは写真部で、レイを「レイ先輩」と呼ぶ。"},
+    {id:7,  t:"肝試しのあいだじゅう、レイの袖をつかんで離さないハル", ok:true, who:"rh", why:"ハルは怖い話が本当にだめ。"},
+    {id:8,  t:"腕相撲に負けたハルが「もう一回！」を連発", ok:true, who:"h", why:"ハルは負けず嫌い。「もう一回！」を五回言った。"},
+    {id:9,  t:"「似合ってない」と言ったあと、別の服を持ってくるレイ", ok:true, who:"rh", why:"レイは嘘がつけない。でも、ちゃんと代わりを持ってくる。"},
+    {id:10, t:"傘を半分ハルの側に傾けて、自分の肩が濡れるレイ", ok:true, who:"rh", why:"出会いの日、レイは自分が濡れてもハルに傘を渡した。"},
+    {id:11, t:"「レイ、待ってよー！」と呼び捨てで追いかけるハル", ok:false, who:"rh", why:"ハルはいつも「レイ先輩」と呼ぶ。"},
+    {id:12, t:"生徒会のみんなの前で、レイが弱音を吐いて泣き出す", ok:false, who:"r", why:"レイは人前で泣かないし、弱音も吐かない。"},
+    {id:13, t:"「ハルちゃん♪ 今日もかわいいね♪」と甘い声のレイ", ok:false, who:"r", why:"レイは口数が少なく、ハルを「ハル」と呼ぶ。"},
+    {id:14, t:"「甘いものは苦手だ」とレイがケーキを断る", ok:false, who:"r", why:"レイは甘いものに目がない。"},
+    {id:15, t:"本当は傷ついているのに、平気な顔で笑ってみせるハル", ok:false, who:"h", why:"ハルは思ったことがすぐ顔に出る。隠しごとは向いていない。"},
+    {id:16, t:"焦げた料理に「最高においしい」とお世辞を言うレイ", ok:false, who:"r", why:"レイは嘘がつけない。"},
+    {id:17, t:"深夜のホラー映画を、一人で平然と楽しむハル", ok:false, who:"h", why:"ハルは怖い話が本当にだめ。"},
+    {id:18, t:"知らない男が、二人の間に割り込んでくる", ok:false, kind:"jirai", who:"rh", why:"地雷。どんな解釈でも許されない。"},
+    {id:19, t:"ナレーション「二人は、ただの先輩後輩だった」", ok:false, kind:"jirai", who:"rh", why:"地雷。二人の関係を雑に片付けてはいけない。"},
+    {id:20, t:"二人の屋上ランチ、描き下ろしイラスト解禁！", ok:true, kind:"official", who:"rh", why:"公式からの供給は、いつだって一致。"},
+  ];
+
+  const GAME_SEC = 40;
+  const $ = id => document.getElementById(id);
+  const screens = ["title","story","game","result"];
+  const show = id => { screens.forEach(s => $(s).classList.toggle("active", s===id)); if(id==="story") $("story").scrollTop = 0; };
+
+  function applyImages(root){
+    root.querySelectorAll(".ava[data-img]").forEach(a=>{
+      const src = IMG[a.dataset.img];
+      if(src){ a.style.backgroundImage = `url(${src})`; a.textContent = ""; }
+    });
+  }
+  applyImages(document);
+
+  let mode = "normal", storyRead = false, state = null, raf = 0;
+
+  // ===== サウンド =====
+  // BGM：Museで作った曲を bgm/ フォルダに置けば鳴る（無ければ無音のまま動く）
+  const BGM = { title:"bgm/title.mp3", countdown:"bgm/countdown.mp3", game:"bgm/game.mp3", result:"bgm/result.mp3" };
+  const BGM_LOOP = { title:true, countdown:false, game:true, result:true };
+  let muted = false; try{ muted = localStorage.getItem("kaishaku-muted")==="1"; }catch(e){}
+  let actx = null, curBgm = null, curKey = null; const bgmEls = {};
+  function audioCtx(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actx && actx.state==="suspended") actx.resume(); return actx; }
+  function playBgm(key){
+    // カウントダウンのジングルは最後まで鳴らし切る（ゲーム曲に切り替えても止めない）
+    if(curBgm && curKey !== "countdown"){ curBgm.pause(); } curBgm = null; curKey = key;
+    if(!key || muted) return;
+    let a = bgmEls[key];
+    if(!a){ a = new Audio(BGM[key]); a.loop = BGM_LOOP[key]; a.volume = .45; a.onerror = ()=>{}; bgmEls[key] = a; }
+    a.currentTime = 0; curBgm = a; a.play().catch(()=>{});
+  }
+  // 効果音はWeb Audioで合成（ファイル不要）
+  function tone(f, t0, dur, type="sine", vol=.18, f2){
+    const c = audioCtx(); if(!c) return;
+    const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + t0;
+    o.type = type; o.frequency.setValueAtTime(f, t); if(f2) o.frequency.exponentialRampToValueAtTime(f2, t+dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.02);
+  }
+  function sfx(k){
+    if(muted) return;
+    if(k==="match"){ tone(880,0,.12,"triangle",.2); tone(1320,.08,.22,"triangle",.18); }
+    else if(k==="block"){ tone(520,0,.14,"square",.08,260); }
+    else if(k==="miss"){ tone(220,0,.25,"sawtooth",.08,140); }
+    else if(k==="combo"){ [660,880,1100,1320].forEach((f,i)=>tone(f,i*.06,.14,"triangle",.14)); }
+    else if((k==="tick"||k==="go") && bgmEls.countdown && bgmEls.countdown.readyState >= 2){ return; }
+    else if(k==="tick"){ tone(1000,0,.08,"sine",.15); }
+    else if(k==="go"){ tone(1500,0,.25,"sine",.18); }
+    else if(k==="end"){ [784,659,523].forEach((f,i)=>tone(f,i*.12,.2,"triangle",.15)); }
+    else if(k==="tap"){ tone(700,0,.06,"sine",.1); }
+  }
+  function setMute(m){
+    muted = m; try{ localStorage.setItem("kaishaku-muted", m?"1":"0"); }catch(e){}
+    $("btnMute").textContent = m ? "🔇" : "🔊";
+    if(m){ if(curBgm) curBgm.pause(); } else { const k = curKey; playBgm(k); }
+  }
+
+  // 山札方式：1回のプレイで同じカードは出ない。全部仕分けたら完走
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function drawCard(){ return state.deck.pop() || null; }
+  function cardLimit(){
+    const m = MODES[mode], p = Math.min(1, state.elapsed / GAME_SEC);
+    return m.from - (m.from - m.to) * p;
+  }
+
+  function startGame(){
+    state = {score:0, combo:0, maxCombo:0, correct:0, accWrong:0, rejRight:0, missed:0, jiraiPassed:0,
+             elapsed:0, last:0, running:false, card:null, cardEl:null, cardStart:0, cardLimit:0, busy:false, mistakes:[], deck:shuffle(CARDS.slice()), cleared:false};
+    $("hudMode").textContent = MODES[mode].name;
+    $("hudScore").textContent = "0"; $("hudTime").textContent = GAME_SEC; $("combo").textContent = "";
+    $("timeFill").style.width = "100%";
+    $("stage").querySelectorAll(".card").forEach(e=>e.remove());
+    $("game").querySelectorAll(".countdown").forEach(e=>e.remove());
+    show("game");
+    const cd = document.createElement("div"); cd.className = "countdown"; $("game").appendChild(cd);
+    let n = 3; cd.textContent = n; playBgm("countdown"); sfx("tick");
+    const iv = setInterval(()=>{
+      n--; if(n>0){ cd.textContent = n; sfx("tick"); return; }
+      clearInterval(iv); cd.remove(); sfx("go"); playBgm("game");
+      state.running = true; state.last = performance.now();
+      nextCard(); raf = requestAnimationFrame(loop);
+    }, 650);
+  }
+
+  function avatarHTML(who){
+    const a = [];
+    if(who.includes("r")) a.push('<div class="ava rei" data-img="rei">レ</div>');
+    if(who.includes("h")) a.push('<div class="ava haru" data-img="haru">ハ</div>');
+    return a.join("");
+  }
+
+  function nextCard(){
+    const c = drawCard();
+    if(!c){ state.cleared = true; state.score += 50; endGame(); return; }
+    state.card = c; state.cardStart = performance.now(); state.cardLimit = cardLimit(); state.busy = false;
+    const el = document.createElement("div");
+    el.className = "card" + (c.kind==="official" ? " official" : "");
+    const scene = IMG.scenes[c.id];
+    el.innerHTML =
+      `<div class="pic"${scene ? ` style="background-image:url(${scene})"` : ""}>` +
+        `<span class="num">場面 ${String(c.id).padStart(2,"0")}</span>` +
+        (c.kind==="official" ? '<span class="badge">公式</span>' : '') +
+        (scene ? "" : avatarHTML(c.who)) +
+      `</div>` +
+      '<span class="stamp like">一致♡</span><span class="stamp nope">違う✕</span>' +
+      '<div class="body"><span class="scene"></span></div><div class="cardtimer"><i></i></div>';
+    el.querySelector(".scene").textContent = c.t;
+    applyImages(el);
+    el.style.transform = "scale(.9)"; el.style.opacity = "0";
+    $("stage").appendChild(el);
+    requestAnimationFrame(()=>{ el.style.transition = "transform .18s, opacity .18s"; el.style.transform = "scale(1)"; el.style.opacity = "1"; });
+    setTimeout(()=>{ el.style.transition = ""; }, 200);
+    attachDrag(el);
+    state.cardEl = el;
+  }
+
+  function loop(now){
+    if(!state.running) return;
+    const dt = now - state.last; state.last = now;
+    state.elapsed += dt/1000;
+    const remain = Math.max(0, GAME_SEC - state.elapsed);
+    $("hudTime").textContent = Math.ceil(remain);
+    $("timeFill").style.width = (remain/GAME_SEC*100) + "%";
+    if(state.cardEl && !state.busy){
+      const p = 1 - (now - state.cardStart)/state.cardLimit;
+      const bar = state.cardEl.querySelector(".cardtimer i");
+      if(bar) bar.style.width = Math.max(0,p*100) + "%";
+      if(p <= 0) judge(null);
+    }
+    if(remain <= 0){ endGame(); return; }
+    raf = requestAnimationFrame(loop);
+  }
+
+  function judge(dir){
+    if(!state.running || state.busy || !state.card) return;
+    state.busy = true;
+    const c = state.card, el = state.cardEl;
+    let ok = false, msg = "", color = "#d04a4a";
+    if(dir === null){ state.missed++; msg = "尊さで固まった…"; color = "#8a7a9a"; }
+    else if(dir === "like"){
+      if(c.ok) ok = true;
+      else { state.accWrong++; if(c.kind==="jirai") state.jiraiPassed++; msg = c.kind==="jirai" ? "地雷とマッチした…" : "その子は、そんなことしない！"; }
+    } else {
+      if(!c.ok){ ok = true; msg = c.kind==="jirai" ? "地雷をブロック！" : "解釈違い、ブロック！"; color = "var(--ng)"; }
+      else { state.rejRight++; msg = c.kind==="official" ? "公式をブロック…!?" : "それは二人らしい場面！"; }
+    }
+    if(!ok && !state.mistakes.some(m=>m.id===c.id)) state.mistakes.push({...c, your: dir});
+    if(ok){
+      state.correct++; state.combo++; state.maxCombo = Math.max(state.maxCombo, state.combo);
+      state.score += 10 * (1 + Math.floor(state.combo/5)) + (c.kind ? 5 : 0);
+      if(dir === "like"){ showMatch(); sfx("match"); } else { pop(msg, color); sfx("block"); }
+      if(state.combo > 0 && state.combo % 5 === 0) sfx("combo");
+      flash(dir==="like" ? "rgba(255,92,138,.16)" : "rgba(90,108,255,.16)");
+    } else {
+      state.combo = 0; pop(msg, color); react(dir===null ? "haru_scared" : "haru_pout"); sfx("miss");
+      $("game").classList.remove("shake"); void $("game").offsetWidth; $("game").classList.add("shake");
+      flash("rgba(120,120,140,.2)");
+    }
+    $("hudScore").textContent = state.score;
+    $("combo").textContent = state.combo >= 3 ? state.combo + " コンボ！" : "";
+    flyOut(el, dir);
+    setTimeout(()=>{ if(state.running) nextCard(); }, 170);
+  }
+
+  function react(key){
+    const r = $("react"); r.style.backgroundImage = `url(${IMG[key]})`;
+    r.style.animation = "none"; void r.offsetWidth; r.style.animation = "reactin .8s ease-out forwards";
+  }
+  function showMatch(){
+    const m = $("match"); m.style.animation = "none"; void m.offsetWidth; m.style.animation = "matchin .6s ease-out forwards";
+  }
+  function flyOut(el, dir){
+    if(!el) return;
+    el.style.transition = "transform .3s ease-in, opacity .3s";
+    const x = dir==="like" ? 500 : dir==="nope" ? -500 : 0, y = dir===null ? 300 : -40, rot = dir==="like" ? 25 : dir==="nope" ? -25 : 0;
+    el.style.transform = `translate(${x}px,${y}px) rotate(${rot}deg)`; el.style.opacity = "0";
+    setTimeout(()=>el.remove(), 320);
+  }
+  function flash(col){ const f = $("flash"); f.style.background = col; f.style.opacity = "1"; setTimeout(()=>f.style.opacity = "0", 90); }
+  function pop(text, color){
+    const p = $("pop"); p.textContent = text; p.style.color = color;
+    p.style.animation = "none"; void p.offsetWidth; p.style.animation = "popup .7s ease-out forwards";
+  }
+
+  function attachDrag(el){
+    let sx=0, sy=0, dx=0, dragging=false, st=0;
+    const likeS = el.querySelector(".stamp.like"), nopeS = el.querySelector(".stamp.nope");
+    el.addEventListener("pointerdown", e=>{
+      if(state.busy) return;
+      dragging = true; sx = e.clientX; sy = e.clientY; dx = 0; st = performance.now();
+      el.setPointerCapture(e.pointerId); el.style.transition = "";
+    });
+    el.addEventListener("pointermove", e=>{
+      if(!dragging) return;
+      dx = e.clientX - sx; const dy = (e.clientY - sy) * .3;
+      el.style.transform = `translate(${dx}px,${dy}px) rotate(${dx/15}deg)`;
+      likeS.style.opacity = Math.max(0, Math.min(1, dx/90));
+      nopeS.style.opacity = Math.max(0, Math.min(1, -dx/90));
+    });
+    const up = ()=>{
+      if(!dragging) return; dragging = false;
+      const v = Math.abs(dx) / Math.max(1, performance.now()-st);
+      if(dx > 70 || (dx > 25 && v > .5)) judge("like");
+      else if(dx < -70 || (dx < -25 && v > .5)) judge("nope");
+      else { el.style.transition = "transform .2s"; el.style.transform = ""; likeS.style.opacity = 0; nopeS.style.opacity = 0; }
+    };
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+  }
+
+  const TYPES = {
+    guard: {name:"解釈の番人", comment:"一致は迷わずマッチ、違いは迷わずブロック。二人のことを、二人以上に分かっているかもしれません。"},
+    omni:  {name:"全部尊い雑食オタク", comment:"解釈違いすら「それもアリ…」と通してしまう広い心。地雷原でも笑顔で歩ける、ある意味最強のオタク。"},
+    strict:{name:"解釈に厳しい古参", comment:"二人らしい場面まで疑ってしまう鋭いまなざし。それだけ大事にしている証拠。たまには素直に浴びて。"},
+    frozen:{name:"尊さで固まったオタク", comment:"尊すぎて指が動かない。仕分ける前に、心が先に処理落ちしています。まずは深呼吸から。"},
+    drift: {name:"これから沼る新規", comment:"まだ二人のことを知り始めたところ。物語をもう一度読めば、きっと見え方が変わります。"},
+  };
+  function diagnose(s){
+    const total = s.correct + s.accWrong + s.rejRight + s.missed;
+    const rate = total ? s.correct/total : 0;
+    if(s.missed >= 4 && s.missed >= s.accWrong + s.rejRight) return "frozen";
+    if(total >= 8 && rate >= .85) return "guard";
+    if(s.accWrong >= 3 && s.accWrong >= s.rejRight * 1.5) return "omni";
+    if(s.rejRight >= 3 && s.rejRight >= s.accWrong * 1.5) return "strict";
+    return "drift";
+  }
+
+  function endGame(){
+    if(!state.running) return;
+    state.running = false; cancelAnimationFrame(raf);
+    if(state.cardEl) state.cardEl.remove();
+    playBgm(null); sfx("end"); setTimeout(()=>playBgm("result"), 900);
+    const key = diagnose(state); state.type = key;
+    const T = TYPES[key];
+    $("rMode").textContent = MODES[mode].name + "モード";
+    $("rType").textContent = T.name;
+    const FACE = {guard:"rei_smile", omni:"haru", strict:"rei", frozen:"haru_scared", drift:"haru_pout"};
+    $("rFace").style.backgroundImage = `url(${IMG[FACE[key]]})`;
+    $("rScore").textContent = state.score;
+    let comment = T.comment;
+    if(state.cleared) comment = "全20場面を仕分けきった！（完走ボーナス＋50pt）" + comment;
+    if(state.jiraiPassed > 0) comment += `（地雷と${state.jiraiPassed}回マッチしたことは、内緒にしておきます）`;
+    $("rComment").textContent = comment;
+    $("sCorrect").textContent = state.correct;
+    $("sCombo").textContent = state.maxCombo;
+    $("sAccWrong").textContent = state.accWrong;
+    $("sRejRight").textContent = state.rejRight;
+    const rv = $("review"); rv.innerHTML = "";
+    if(state.mistakes.length){
+      const h = document.createElement("h3"); h.textContent = "見直しポイント"; rv.appendChild(h);
+      state.mistakes.forEach(m=>{
+        const d = document.createElement("div"); d.className = "item";
+        const b = document.createElement("b"); b.textContent = m.t;
+        const a = document.createElement("div"); a.className = "ans";
+        a.textContent = "正解：" + (m.ok ? "解釈一致 ♡" : "解釈違い ✕") + (m.your===null ? "（時間切れ）" : "");
+        a.style.color = m.ok ? "var(--ok)" : "var(--ng)";
+        const w = document.createElement("div"); w.className = "why"; w.textContent = m.why;
+        d.append(b, a, w); rv.appendChild(d);
+      });
+    }
+    setTimeout(()=>{ show("result"); $("result").scrollTop = 0; }, 400);
+  }
+
+  function makeResultImage(){
+    const W = 1080, H = 1080, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const g = cv.getContext("2d");
+    const bg = g.createLinearGradient(0,0,W,H); bg.addColorStop(0,"#fff3f8"); bg.addColorStop(1,"#efe9ff");
+    g.fillStyle = bg; g.fillRect(0,0,W,H);
+    g.fillStyle = "#fff"; roundRect(g,80,170,W-160,760,48); g.fill();
+    g.textAlign = "center";
+    const font = '"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif';
+    const tg = g.createLinearGradient(200,0,880,0); tg.addColorStop(0,"#ff5c8a"); tg.addColorStop(.5,"#b45cff"); tg.addColorStop(1,"#5a6cff");
+    g.fillStyle = tg; g.font = `900 76px ${font}`; g.fillText("解釈違いを弾け！", W/2, 120);
+    g.fillStyle = "#8a7a9a"; g.font = `700 38px ${font}`; g.fillText(MODES[mode].name + "モードの診断結果", W/2, 260);
+    g.fillStyle = "#b45cff"; g.font = `900 80px ${font}`; g.fillText(TYPES[state.type].name, W/2, 390);
+    g.fillStyle = "#ff5c8a"; g.font = `900 110px ${font}`; g.fillText(state.score + " pt", W/2, 540);
+    g.fillStyle = "#3a2b4a"; g.font = `700 38px ${font}`;
+    g.fillText(`正しく仕分け ${state.correct}　最大コンボ ${state.maxCombo}`, W/2, 640);
+    g.fillText(`通した解釈違い ${state.accWrong}　弾いた解釈一致 ${state.rejRight}`, W/2, 705);
+    g.fillStyle = "#8a7a9a"; g.font = `700 34px ${font}`; g.fillText("あなたは二人を、どこまで分かってる？", W/2, 840);
+    g.font = `700 30px ${font}`; g.fillText("ai-kaishain-lab.github.io/kaishaku", W/2, 1010);
+    return new Promise(res => cv.toBlob(res, "image/png"));
+  }
+  function roundRect(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+
+  async function share(){
+    const url = location.href.split("#")[0];
+    const text = `【解釈違いを弾け！】${MODES[mode].name}モードで「${TYPES[state.type].name}」でした（${state.score}pt）\nあなたは二人を、どこまで分かってる？`;
+    try{
+      const blob = await makeResultImage();
+      const file = new File([blob], "kaishaku-result.png", {type:"image/png"});
+      if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text: text + "\n" + url}); return; }
+      if(navigator.share){ await navigator.share({text, url}); return; }
+    }catch(e){ if(e && e.name === "AbortError") return; }
+    try{ await navigator.clipboard.writeText(text + "\n" + url); note("シェア文をコピーしました"); }
+    catch(e){ note("シェアに対応していない環境です"); }
+  }
+  function note(msg){ const p = $("btnShare"), old = p.textContent; p.textContent = msg; setTimeout(()=>p.textContent = old, 1600); }
+
+  $("btnMute").textContent = muted ? "🔇" : "🔊";
+  $("btnMute").addEventListener("click", e=>{ e.stopPropagation(); setMute(!muted); });
+  // iPhoneは最初のタップまで音が出せないので、最初のタップでタイトル曲を開始
+  document.addEventListener("pointerdown", function first(){ audioCtx(); if(!bgmEls.countdown){ const c = new Audio(BGM.countdown); c.preload = "auto"; c.volume = .45; c.onerror = ()=>{}; bgmEls.countdown = c; c.load(); } if(!curKey && $("title").classList.contains("active")) playBgm("title"); document.removeEventListener("pointerdown", first); });
+  document.querySelectorAll(".mbtn").forEach(b => b.addEventListener("click", ()=>{
+    sfx("tap");
+    mode = b.dataset.m;
+    if(!storyRead) show("story"); else startGame();
+  }));
+  $("btnReadStory").addEventListener("click", ()=>{ show("story"); playBgm("title"); });
+  $("btnStoryGo").addEventListener("click", ()=>{ storyRead = true; startGame(); });
+  $("btnStoryBack").addEventListener("click", ()=>{ storyRead = true; show("title"); });
+  $("btnLike").addEventListener("click", ()=>judge("like"));
+  $("btnNope").addEventListener("click", ()=>judge("nope"));
+  $("btnRetry").addEventListener("click", startGame);
+  $("btnStory2").addEventListener("click", ()=>show("story"));
+  $("btnTitle").addEventListener("click", ()=>{ show("title"); playBgm("title"); });
+  $("btnShare").addEventListener("click", share);
+  document.addEventListener("keydown", e=>{
+    if(!state || !state.running) return;
+    if(e.key === "ArrowRight") judge("like");
+    if(e.key === "ArrowLeft") judge("nope");
+  });
+}
+</script>
+</body>
+</html>
