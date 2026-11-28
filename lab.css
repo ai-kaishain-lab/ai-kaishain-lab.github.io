@@ -126,3 +126,96 @@ a.lab-tag:hover { opacity: .88; }
   .lab-card { transition: none; }
   .lab-card:hover { transform: none; }
 }
+
+/* =========================================================
+   2026-11 リニューアルで追加した部品（トップ・道具箱）
+   ========================================================= */
+.lab-page--wide { max-width: 1080px; }
+.lab-card img { background: var(--tint-cool); }  /* 読み込み中の空白を色付きに */
+
+/* ---------- SiteNav：上部のナビ ---------- */
+.lab-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+.lab-nav__links { display: flex; gap: 18px; font-size: 14px; }
+.lab-nav__links a { color: var(--ink-muted); text-decoration: none; }
+.lab-nav__links a:hover { color: var(--ink); }
+
+/* ---------- Hero：トップの顔 ---------- */
+.lab-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 36px; align-items: center; margin-bottom: 56px; }
+.lab-hero__kicker { font-family: var(--font-mono); font-size: 13px; color: var(--accent-text); letter-spacing: .08em; margin: 0 0 10px; }
+.lab-hero h1 { font-size: clamp(30px, 4.6vw, 46px); line-height: 1.3; margin: 0 0 14px; letter-spacing: .01em; }
+.lab-hero h1 em { font-style: normal; color: var(--accent); }
+.lab-hero__lead { color: var(--ink-muted); margin: 0 0 24px; font-size: 16px; }
+.lab-hero__actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.lab-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 46px; padding: 0 20px; border-radius: var(--radius-pill); font-weight: 700; font-size: 15px; text-decoration: none; border: 1px solid transparent; cursor: pointer; font-family: inherit; transition: transform .12s, background .12s; }
+.lab-btn--primary { background: var(--accent-strong); color: var(--on-accent); }
+.lab-btn--primary:hover { transform: translateY(-1px); }
+.lab-btn--ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.lab-btn--ghost:hover { border-color: var(--ink-muted); }
+.lab-mosaic { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; transform: rotate(1.5deg); }
+.lab-mosaic a { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--tint-cool); aspect-ratio: 1200 / 630; transition: transform .15s; }
+.lab-mosaic a:nth-child(2n) { transform: translateY(14px); }
+.lab-mosaic a:hover { transform: scale(1.03); }
+.lab-mosaic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ---------- SectionHead ---------- */
+.lab-sec { margin: 0 0 56px; }
+.lab-sec__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.lab-sec__head h2 { margin: 0 !important; font-size: 22px; }
+.lab-sec__head a { font-size: 14px; color: var(--accent-text); font-weight: 700; text-decoration: none; white-space: nowrap; }
+
+/* ---------- Grid：作品の並び ---------- */
+.lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 18px; }
+.lab-grid .lab-card__body { padding: 12px 14px 14px; }
+.lab-grid .lab-card__title { font-size: 17px; margin: 2px 0 4px; }
+.lab-grid .lab-card__desc { font-size: 14px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.lab-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-muted); margin-bottom: 4px; letter-spacing: .03em; }
+.lab-badge { display: inline-block; padding: 1px 7px; border-radius: var(--radius-pill); font-weight: 500; font-size: 11px; }
+.lab-badge--new { background: var(--accent-strong); color: var(--on-accent); }
+.lab-badge--tag { border: 1px solid var(--line); }
+
+/* ---------- Chips：絞り込み ---------- */
+.lab-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.lab-chip { font: inherit; font-size: 14px; padding: 6px 14px; min-height: 36px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--surface); color: var(--ink-muted); cursor: pointer; }
+.lab-chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.lab-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; }
+
+/* ---------- Panel：note・SNS などの横並び ---------- */
+.lab-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+.lab-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl); padding: 20px 22px; }
+.lab-panel h3 { margin: 0 0 6px !important; font-size: 17px; }
+.lab-panel p { margin: 0 0 12px; color: var(--ink-muted); font-size: 14.5px; }
+
+/* ---------- 運営者用ツールの説明（控えめな囲み） ---------- */
+.lab-operator { font-size: 14px; color: var(--ink-muted); border: 1px dashed var(--line); border-radius: var(--radius-xl); padding: 4px 22px 18px; }
+.lab-operator h2 { font-size: 16px !important; color: var(--ink); }
+.lab-operator h3 { font-size: 14px !important; color: var(--ink); }
+.lab-operator ul { padding-left: 1.2em; }
+
+@media (max-width: 720px) {
+  .lab-hero { grid-template-columns: 1fr; gap: 28px; margin-bottom: 44px; }
+  .lab-mosaic { transform: none; }
+  .lab-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .lab-grid .lab-card__body { padding: 10px 10px 12px; }
+  .lab-grid .lab-card__title { font-size: 15px; }
+  .lab-grid .lab-card__desc { font-size: 12.5px; -webkit-line-clamp: 2; }
+  .lab-grid .lab-card__note { display: block; margin: 6px 0 0; font-size: 12px; }
+  .lab-grid .lab-meta { font-size: 10.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-mosaic, .lab-mosaic a, .lab-mosaic a:nth-child(2n) { transform: none; transition: none; }
+}
+
+
+/* ---------- 登場アニメーション（JSが .lab-anim を付けたときだけ動く） ---------- */
+.lab-anim .lab-reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease-out, transform .55s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
+.lab-anim .lab-reveal.is-in { opacity: 1; transform: none; }
+.lab-anim .lab-mosaic a { opacity: 0; transition: opacity .6s ease-out, transform .6s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
+.lab-anim .lab-mosaic a:nth-child(odd) { transform: translateY(26px) rotate(-3deg); }
+.lab-anim .lab-mosaic a:nth-child(even) { transform: translateY(40px) rotate(3deg); }
+.lab-anim .lab-mosaic.is-in a { opacity: 1; transform: none; }
+.lab-anim .lab-mosaic.is-in a:nth-child(2n) { transform: translateY(14px); }
+.lab-anim .lab-mosaic.is-in a:hover { transform: scale(1.03); transition-delay: 0s; }
+@media (max-width: 720px) { .lab-anim .lab-mosaic.is-in a:nth-child(2n) { transform: translateY(14px); } }
+@media (prefers-reduced-motion: reduce) {
+  .lab-anim .lab-reveal, .lab-anim .lab-mosaic a { opacity: 1 !important; transform: none !important; transition: none !important; }
+}

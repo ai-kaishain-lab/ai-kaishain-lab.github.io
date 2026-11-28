@@ -5,36 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="JMpgmukEKgrOPzTyC5hq4MAYuOh-r80AoRr1KutFLmA" />
 <title>会社員のAI実験室</title>
-<meta name="description" content="会社員のAI実験室の公式ページです。AIと一緒に作った道具の置き場（道具箱）と、運営者用ツール「AI実験室インサイト」の説明を載せています。">
+<meta name="description" content="会社員が週末、&quot;あったらいいな&quot;をAIと作ってみる実験室。ブラウザで開くだけで遊べる小さなアプリを置いています。運営者用ツール「AI実験室インサイト」の説明も載せています。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="会社員のAI実験室">
-<meta property="og:description" content="AIと一緒に作った道具の置き場（道具箱）はこちら。">
+<meta property="og:description" content="会社員が週末、&quot;あったらいいな&quot;をAIと作ってみる実験室。ブラウザで開くだけで遊べます。">
 <meta property="og:url" content="https://ai-kaishain-lab.github.io/">
-<meta property="og:image" content="https://ai-kaishain-lab.github.io/og-globe.png">
+<meta property="og:image" content="https://ai-kaishain-lab.github.io/og-lab.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="color-scheme" content="light dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="lab.css">
-<style>
-  .sns a { color: var(--ink); }
-  section.insights { margin-top: 2.6rem; padding-top: .4rem; border-top: 1px solid var(--line); font-size: 15px; }
-  section.insights h2 { margin-top: 1.4rem; }
-  .lab-footer p { margin: 0; }
-</style>
 </head>
 <body>
-<main class="lab-page lab-page--read">
+<main class="lab-page lab-page--wide">
+
+<nav class="lab-nav" aria-label="サイト内">
 <span class="lab-tag">会社員のAI実験室</span>
-<h1>会社員のAI実験室</h1>
-<p class="lab-lead">企画職の会社員が、仕事や暮らしの「面倒くさい」をAIで減らす実験を記録しています。実験の様子は、InstagramとYouTubeの短い動画や、noteの記事で発信しています。</p>
+<div class="lab-nav__links"><a href="tools.html">作品一覧</a><a href="https://note.com/hideai_lab" target="_blank" rel="noopener">note</a><a href="#operator">運営者用ツール</a></div>
+</nav>
 
-<a class="lab-card lab-card--text" href="tools.html"><h2 class="lab-card__title">道具箱</h2><p class="lab-card__desc">AIと一緒に作った道具を置いています。インストールは不要で、ブラウザで開くだけで使えます（例：回せる地球儀）。</p><span class="lab-card__go">道具箱を開く →</span></a>
+<section class="lab-hero">
+<div>
+<p class="lab-hero__kicker">WEEKEND × AI LAB</p>
+<h1>会社員が週末、<br><em>"あったらいいな"</em>を<br>AIと作ってみる実験室。</h1>
+<p class="lab-hero__lead">役に立つものも、立たないものもあります。インストール不要。ブラウザで開いて、30秒で遊べます。</p>
+<div class="lab-hero__actions">
+<a class="lab-btn lab-btn--primary" href="tools.html">作品を見る →</a>
+<button type="button" class="lab-btn lab-btn--ghost" id="random">ランダムで1つ遊ぶ</button>
+</div>
+</div>
+<div class="lab-mosaic" aria-label="作品の例">
+<a href="erai-button.html"><img src="og-erai-button.png" alt="えらいボタン"></a>
+<a href="shirahadori.html"><img src="og-shirahadori.png" alt="真剣白刃取り"></a>
+<a href="hasamaruna/"><img src="og-hasamaruna.png" alt="百合の間に挟まるな！"></a>
+<a href="nomikai-battle.html"><img src="og-nomikai-battle.png" alt="飲み会ネタバトル"></a>
+</div>
+</section>
 
-<p class="lab-links sns"><a href="https://www.instagram.com/ai_kaishain_lab/" target="_blank" rel="noopener">Instagram</a><a href="https://www.youtube.com/@ai_kaishain_lab" target="_blank" rel="noopener">YouTube</a><a href="https://note.com/hideai_lab" target="_blank" rel="noopener">note</a></p>
+<section class="lab-sec">
+<div class="lab-sec__head"><h2>最近の実験</h2><a href="tools.html">すべて見る →</a></div>
+<div class="lab-grid" id="latest"><p><a href="tools.html">作品一覧を開く →</a></p></div>
+</section>
 
-<section class="insights">
+<section class="lab-sec">
+<div class="lab-panels">
+<div class="lab-panel">
+<h3>作るまでの話は、noteに</h3>
+<p>どんなやり取りでAIと作ったのか、うまくいかなかったところも含めて書いています。</p>
+<a class="lab-card__go" href="https://note.com/hideai_lab" target="_blank" rel="noopener">noteを読む →</a>
+</div>
+<div class="lab-panel">
+<h3>動いているところは、動画で</h3>
+<p>作ったアプリを短い動画で紹介しています。</p>
+<p class="lab-links" style="margin:0"><a href="https://www.youtube.com/@ai_kaishain_lab" target="_blank" rel="noopener">YouTube</a><a href="https://www.instagram.com/ai_kaishain_lab/" target="_blank" rel="noopener">Instagram</a></p>
+</div>
+</div>
+</section>
+
+<section class="lab-operator" id="operator">
 <h2>AI実験室インサイト（運営者用ツール）</h2>
 <p>「AI実験室インサイト」は、Instagram・YouTubeで発信している「会社員のAI実験室」（@ai_kaishain_lab）の運営者が、<strong>自分自身のチャンネルとアカウントの数値</strong>を記録するためだけに使う個人用のツールです。一般の利用者向けに公開・提供しているサービスではありません。</p>
 
@@ -60,9 +90,36 @@
 </section>
 
 <footer class="lab-footer">
-<p>お問い合わせ：Instagram <a href="https://www.instagram.com/ai_kaishain_lab/">@ai_kaishain_lab</a> のDMまで</p>
+<p style="margin:0">お問い合わせ：Instagram <a href="https://www.instagram.com/ai_kaishain_lab/">@ai_kaishain_lab</a> のDMまで</p>
 <p class="lab-copy">© 2026 会社員のAI実験室</p>
 </footer>
 </main>
+<script>
+(function(){
+  var fallback=['erai-button.html','shirahadori.html','hasamaruna/','nomikai-battle.html','moyamoya-hanabi.html','dare-no-kaito.html'];
+  var urls=fallback;
+  document.getElementById('random').addEventListener('click',function(){
+    location.href=urls[Math.floor(Math.random()*urls.length)];
+  });
+  var LABEL={solo:'ひとりで遊ぶ',group:'みんなで遊ぶ',useful:'地味に便利'};
+  fetch('tools.html').then(function(r){return r.text()}).then(function(html){
+    var doc=new DOMParser().parseFromString(html,'text/html');
+    var cards=[].slice.call(doc.querySelectorAll('#list > .lab-card'));
+    cards.sort(function(a,b){return b.dataset.added-a.dataset.added});
+    urls=cards.map(function(c){return c.querySelector('.lab-card__go').getAttribute('href')});
+    var box=document.getElementById('latest');box.innerHTML='';
+    cards.slice(0,6).forEach(function(c,i){
+      var el=document.importNode(c,true);
+      el.querySelectorAll('.lab-card__note').forEach(function(n){n.remove()});
+      var m=document.createElement('div');m.className='lab-meta';
+      m.innerHTML='<span>実験 No.'+('00'+c.dataset.added).slice(-3)+'</span>'+(i===0?'<span class="lab-badge lab-badge--new">NEW</span>':'')+(LABEL[c.dataset.tag]?'<span class="lab-badge lab-badge--tag">'+LABEL[c.dataset.tag]+'</span>':'');
+      var b=el.querySelector('.lab-card__body');b.insertBefore(m,b.firstChild);
+      box.appendChild(el);
+    });
+    if (window.labAnimWatch) window.labAnimWatch(box);
+  }).catch(function(){});
+})();
+</script>
+<script src="lab-anim.js"></script>
 </body>
 </html>
