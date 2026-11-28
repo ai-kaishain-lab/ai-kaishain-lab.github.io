@@ -221,8 +221,10 @@ a.lab-tag:hover { opacity: .88; }
 }
 
 /* ---------- カード全体が押せることを見せる（2026-11-28） ---------- */
-.lab-card { cursor: pointer; }
-.lab-grid .lab-card { display: flex; flex-direction: column; }
+.lab-grid .lab-card { display: flex; flex-direction: column; cursor: default; }
+.lab-grid .lab-card:hover { transform: none; box-shadow: none; }
+.lab-grid .lab-card__go::after { content: none; }   /* 押せるのは「開く」ボタンだけ */
+.lab-grid .lab-card__go { cursor: pointer; }
 .lab-grid .lab-card__body { display: flex; flex-direction: column; flex: 1; }
 .lab-grid .lab-card__go {
   margin-top: auto; padding-top: 0; align-self: stretch; text-align: center;
@@ -230,8 +232,8 @@ a.lab-tag:hover { opacity: .88; }
   padding: 9px 12px; font-size: 15px; transition: transform .12s;
 }
 .lab-grid .lab-card__desc { margin-bottom: 12px; }
-.lab-grid .lab-card:hover .lab-card__go { transform: scale(1.03); }
-.lab-grid .lab-card:active { transform: scale(.98); }
+.lab-grid .lab-card__go:hover { transform: scale(1.03); }
+.lab-grid .lab-card__go:active { transform: scale(.97); }
 .lab-grid .lab-card__note[lang="en"] { align-self: center; margin: 8px 0 0; }
 @media (max-width: 720px) {
   .lab-grid .lab-card__go { font-size: 14px; padding: 8px 10px; }
