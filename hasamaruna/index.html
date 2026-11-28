@@ -61,6 +61,9 @@ button:active{transform:translateY(2px);box-shadow:0 2px 0 #c99a00}
 .acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 button.shr{background:rgba(255,255,255,.14);color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.7) inset}
 button.shr:active{box-shadow:0 0 0 2px rgba(255,255,255,.7) inset}
+.snote{font-size:13px;margin:8px 0 0!important;color:#ffe3ec}
+.save{display:inline-block;margin-top:6px;font-size:13px;color:#fff;text-decoration:underline}
+.ov.end .snote,.ov.end .save{grid-column:1/-1;justify-self:center;text-align:center}
 button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .how{margin-top:16px;color:var(--sub);font-size:15px}
 .how b{color:var(--ink)}
@@ -91,6 +94,8 @@ button:focus-visible{outline:3px solid #fff;outline-offset:3px}
       <div class="rank" id="rk"></div>
       <p id="bs"></p>
       <div class="acts"><button id="again">もう一回</button><button class="shr" id="share">結果をシェア</button></div>
+      <p class="snote" id="snote" hidden></p>
+      <a class="save" id="save" href="#" download="hasamaruna-result.png" hidden>結果の画像を保存</a>
     </div></div>
   </div>
   <p class="how"><b>遊び方</b>　左右から歩いてくる虫は1回、ヘルメットの大きい虫は2回、空から急降下してくる虫は小さいので狙って叩く。連続で当てるとコンボで得点が増え、空振りするとコンボが切れます。</p>
@@ -152,13 +157,53 @@ $('snd').onclick=()=>setMute(!muted);setMute(muted);
 function reset(){score=0;breaches=0;combo=0;gauge=100;time=LIMIT;elapsed=0;foes=[];parts=[];texts=[];hearts=[];spawnT=.6;react=0;st='play';$('start').hidden=true;$('over').hidden=true}
 function begin(){ensureAudio();reset();music('play',true)}
 $('go').onclick=begin;$('again').onclick=begin;
-let shareText='';
+let shareText='',shareBlob=null,shareInfo=null;
+const URL0='https://ai-kaishain-lab.github.io/hasamaruna/';
+/* シェア用の結果画像（1200×630）：結末の絵＋見出し・スコア・称号・URL */
+async function makeCard(o){
+  try{await document.fonts.load('800 40px "M PLUS Rounded 1c"')}catch(e){}
+  const c=document.createElement('canvas');c.width=1200;c.height=630;const g=c.getContext('2d');
+  const im=img['end-'+o.tier];
+  if(ok(im)){const k=Math.max(1200/im.naturalWidth,630/im.naturalHeight),w=im.naturalWidth*k,h=im.naturalHeight*k;g.drawImage(im,(1200-w)/2,(630-h)*.3,w,h)}
+  else{g.fillStyle='#2a1b30';g.fillRect(0,0,1200,630)}
+  const gr=g.createLinearGradient(0,280,0,630);gr.addColorStop(0,'rgba(31,18,38,0)');gr.addColorStop(.45,'rgba(31,18,38,.82)');gr.addColorStop(1,'rgba(31,18,38,.95)');g.fillStyle=gr;g.fillRect(0,280,1200,350);
+  const F=(z)=>`800 ${z}px "M PLUS Rounded 1c",system-ui,sans-serif`;
+  g.textBaseline='alphabetic';g.lineJoin='round';
+  const txt=(s,x,y,z,col,al)=>{g.font=F(z);g.textAlign=al||'left';g.lineWidth=Math.max(4,z/7);g.strokeStyle='rgba(40,10,40,.85)';g.strokeText(s,x,y);g.fillStyle=col;g.fillText(s,x,y)};
+  /* 左上：タイトルの帯 */
+  g.font=F(30);const tw=g.measureText('百合の間に挟まるな！').width;
+  g.fillStyle='rgba(255,111,145,.92)';g.beginPath();g.roundRect(32,30,tw+44,58,29);g.fill();
+  g.fillStyle='#fff';g.textAlign='left';g.fillText('百合の間に挟まるな！',54,70);
+  /* 下：結末・称号（左）とスコア（右） */
+  txt(o.head,56,520,64,'#ffffff');
+  txt('称号：'+o.rank,58,580,32,'#ffe3ec');
+  txt('点',1144,580,44,'#ffd84d','right');g.font=F(44);const pw=g.measureText('点').width;
+  txt(String(o.score),1144-pw-8,580,132,'#ffd84d','right');
+  g.font=F(18);g.textAlign='right';g.fillStyle='rgba(255,255,255,.75)';g.fillText('ai-kaishain-lab.github.io/hasamaruna',1144,612);
+  return await new Promise(r=>c.toBlob(r,'image/png'));
+}
+const touch=matchMedia('(pointer: coarse)').matches;
+function note(t){$('snote').textContent=t;$('snote').hidden=!t}
 $('share').onclick=async()=>{
-  const url='https://ai-kaishain-lab.github.io/hasamaruna/';
-  try{if(navigator.share){await navigator.share({text:shareText,url});return}}catch(e){if(e&&e.name==='AbortError')return}
-  const w=window.open('https://x.com/intent/post?text='+encodeURIComponent(shareText)+'&url='+encodeURIComponent(url),'_blank');
-  if(w){w.opener=null}else{try{await navigator.clipboard.writeText(shareText+' '+url);$('share').textContent='コピーしました'}catch(e){$('share').textContent='コピーできませんでした'}}
+  if(!shareBlob&&shareInfo)setBlob(await makeCard(shareInfo));
+  const file=shareBlob?new File([shareBlob],'hasamaruna-result.png',{type:'image/png'}):null;
+  /* スマホ：共有シートで画像＋コメントをまとめて渡す（Xアプリ・LINEなどに画像付きで投稿できる） */
+  if(touch&&navigator.share){
+    try{
+      if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:shareText+'\n'+URL0});return}
+      await navigator.share({text:shareText,url:URL0});return;
+    }catch(e){if(e&&e.name==='AbortError')return}
+  }
+  /* PC：画像をクリップボードにコピーしてから、コメント入りのX投稿画面を開く（画像は貼り付けで添付） */
+  let copied=false;
+  if(shareBlob&&window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){try{await navigator.clipboard.write([new ClipboardItem({'image/png':shareBlob})]);copied=true}catch(e){}}
+  const w=window.open('https://x.com/intent/post?text='+encodeURIComponent(shareText)+'&url='+encodeURIComponent(URL0),'_blank');
+  if(w)w.opener=null;
+  note(copied?'結果の画像をコピーしました。投稿画面で貼り付け（Ctrl+V / ⌘V）すると画像を添付できます。':'投稿画面に画像を添付するときは、下の「結果の画像を保存」から保存してください。');
+  $('save').hidden=false;
 };
+function setBlob(b){shareBlob=b;const a=$('save');if(a.dataset.u)URL.revokeObjectURL(a.dataset.u);if(b){const u=URL.createObjectURL(b);a.dataset.u=u;a.href=u}}
+$('save').onclick=e=>{if(!shareBlob)e.preventDefault()};
 
 function spawn(){
   const lv=elapsed/LIMIT,r=Math.random();
@@ -235,8 +280,10 @@ function finish(){
   $('over').style.backgroundImage=`linear-gradient(180deg,rgba(31,18,38,0) 58%,rgba(31,18,38,.88) 86%),url(end-${tier}.webp)`;
   $('fs').textContent=score;$('rk').textContent='称号：'+rk;
   $('bs').textContent=nb?'自己ベスト更新！':'自己ベスト '+best;
-  shareText=`百合の間に挟まるな！ ${score}点、称号「${rk}」。${END[tier][0]} #百合の間に挟まるな`;
-  $('share').textContent='結果をシェア';
+  shareText=`百合の間に挟まるな！ ${score}点で称号「${rk}」。結末は「${END[tier][0]}」でした。 #百合の間に挟まるな`;
+  $('share').textContent='結果をシェア';note('');$('save').hidden=touch;
+  setBlob(null);shareInfo={tier,head:END[tier][0],rank:rk,score};
+  const me=shareInfo;makeCard(me).then(b=>{if(shareInfo===me)setBlob(b)});
   $('over').hidden=false;music(tier,false);
 }
 
