@@ -23,7 +23,7 @@
 
 <nav class="lab-nav" aria-label="サイト内">
 <span class="lab-tag">会社員のAI実験室</span>
-<div class="lab-nav__links"><a href="tools.html">作品一覧</a><a href="https://note.com/hideai_lab" target="_blank" rel="noopener">note</a><a href="#operator">運営者用ツール</a></div>
+<div class="lab-nav__links"><a href="#works">作品一覧</a><a href="https://note.com/hideai_lab" target="_blank" rel="noopener">note</a><a href="#operator">運営者用ツール</a></div>
 </nav>
 
 <section class="lab-hero">
@@ -32,7 +32,7 @@
 <h1>会社員が週末、<br><em>"あったらいいな"</em>を<br>AIと作ってみる実験室。</h1>
 <p class="lab-hero__lead">役に立つものも、立たないものもあります。インストール不要。ブラウザで開いて、30秒で遊べます。</p>
 <div class="lab-hero__actions">
-<a class="lab-btn lab-btn--primary" href="tools.html">作品を見る →</a>
+<a class="lab-btn lab-btn--primary" href="#works">作品を見る ↓</a>
 <button type="button" class="lab-btn lab-btn--ghost" id="random">ランダムで1つ遊ぶ</button>
 </div>
 </div>
@@ -44,24 +44,9 @@
 </div>
 </section>
 
-<section class="lab-sec">
-<div class="lab-sec__head"><h2>最近の実験</h2><a href="tools.html">すべて見る →</a></div>
+<section class="lab-sec" id="works">
+<div class="lab-sec__head"><h2>実験作品<span id="count" style="font-size:14px;color:var(--ink-muted);font-weight:400;margin-left:8px"></span></h2><a href="tools.html">種類で絞り込む →</a></div>
 <div class="lab-grid" id="latest"><p><a href="tools.html">作品一覧を開く →</a></p></div>
-</section>
-
-<section class="lab-sec">
-<div class="lab-panels">
-<div class="lab-panel">
-<h3>作るまでの話は、noteに</h3>
-<p>どんなやり取りでAIと作ったのか、うまくいかなかったところも含めて書いています。</p>
-<a class="lab-card__go" href="https://note.com/hideai_lab" target="_blank" rel="noopener">noteを読む →</a>
-</div>
-<div class="lab-panel">
-<h3>動いているところは、動画で</h3>
-<p>作ったアプリを短い動画で紹介しています。</p>
-<p class="lab-links" style="margin:0"><a href="https://www.youtube.com/@ai_kaishain_lab" target="_blank" rel="noopener">YouTube</a><a href="https://www.instagram.com/ai_kaishain_lab/" target="_blank" rel="noopener">Instagram</a></p>
-</div>
-</div>
 </section>
 
 <section class="lab-operator" id="operator">
@@ -107,8 +92,8 @@
     var cards=[].slice.call(doc.querySelectorAll('#list > .lab-card'));
     cards.sort(function(a,b){return b.dataset.added-a.dataset.added});
     urls=cards.map(function(c){return c.querySelector('.lab-card__go').getAttribute('href')});
-    var box=document.getElementById('latest');box.innerHTML='';
-    cards.slice(0,6).forEach(function(c,i){
+    var box=document.getElementById('latest');box.innerHTML='';document.getElementById('count').textContent='全'+cards.length+'本';
+    cards.forEach(function(c,i){
       var el=document.importNode(c,true);
       el.querySelectorAll('.lab-card__note').forEach(function(n){n.remove()});
       var m=document.createElement('div');m.className='lab-meta';
